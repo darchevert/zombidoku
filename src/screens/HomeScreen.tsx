@@ -185,7 +185,11 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    aspectRatio: 0.82,
+    // Taller than a plain square so the streak card's extra "next bonus"
+    // line has room — flexbox's space-between doesn't grow the box to
+    // fit content, so too-short a ratio here overflows text past the
+    // card's rounded corner instead of clipping or wrapping it.
+    aspectRatio: 0.72,
     borderRadius: 22,
     padding: 16,
     alignItems: 'center',
