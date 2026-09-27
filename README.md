@@ -413,3 +413,12 @@ npx eas-cli build --platform android
 - Les publicités récompensées (§1) sont un mock — voir
   `utils/ads.ts` pour ce qu'il reste à faire pour un vrai SDK
   (`react-native-google-mobile-ads`, build natif EAS, compte AdMob).
+- Préparation à la soumission sur les stores : `app.json` a ses
+  identifiants natifs (`bundleIdentifier`/`package`
+  `com.darchevert.zombidoku`) et le plugin App Tracking Transparency
+  (`src/utils/tracking.ts`, appelé avant chaque pub — mock ou réelle) ;
+  `eas.json` a des profils de build de base ; `public/privacy.html` est
+  une politique de confidentialité prête à héberger (à compléter avant
+  publication) ; `docs/store-submission.md` regroupe le texte de fiche
+  store et les réponses aux formulaires "Sécurité des données"/"App
+  Privacy" des deux consoles.

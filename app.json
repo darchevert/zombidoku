@@ -7,9 +7,13 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.darchevert.zombidoku",
+      "buildNumber": "1"
     },
     "android": {
+      "package": "com.darchevert.zombidoku",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#241B33",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -20,6 +24,14 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-tracking-transparency",
+        {
+          "userTrackingPermission": "Zombidoku utilise cet identifiant pour proposer des publicités récompensées pertinentes et financer le jeu."
+        }
+      ]
+    ]
   }
 }
