@@ -212,14 +212,29 @@ Les deux mécanismes de rétention quotidienne sont pleinement fonctionnels :
   (`PowerButton`, `badgeVariant="ad"`) ; un tap lance une pub récompensée
   qui, en cas de succès, recharge *et* exécute directement ce bonus précis
   (niveaux normaux uniquement, masqué sur web où le fallback reste
-  d'acheter la charge avec des 🧠). **Actuellement un mock** : un vrai SDK
-  publicitaire (AdMob via `react-native-google-mobile-ads`) nécessite un
-  plugin de config Expo, un build natif (EAS) et un compte AdMob — rien
-  de tout ça n'est installable ni testable dans cet environnement de
-  développement sandboxé, sans outillage natif ni appareil. `showRewardedAd`
-  simule la même forme asynchrone "charger → afficher → récompenser"
-  qu'un vrai SDK, pour que le remplacement par l'intégration réelle soit
-  un changement d'une fonction, pas une refonte de GameScreen.
+  d'acheter la charge avec des 🧠).
+  - **Sur iOS/Android** (`utils/ads.ts`) : vrai SDK `react-native-google-mobile-ads`,
+    branché sur les identifiants de test publics de Google
+    (`TestIds.REWARDED`, voir `src/config/adIds.js` et son flag
+    `USE_TEST_ADS`) tant que les vraies apps/blocs AdMob n'existent pas.
+    Ce fichier est volontairement séparé par plateforme (`ads.ts` +
+    `ads.web.ts`, résolus automatiquement par Metro) plutôt qu'un simple
+    `if (Platform.OS === 'web')` : un des modules du SDK importe des
+    internes natifs de React Native que Metro refuse carrément de bundler
+    pour le web, avant même l'exécution — un `import()` dynamique ne
+    suffit pas à éviter ça, contrairement au cas de
+    `expo-tracking-transparency` juste en dessous. Passer aux vraies
+    pubs une fois les identifiants créés : remplir
+    `ANDROID_REWARDED_UNIT_ID`/`IOS_REWARDED_UNIT_ID` dans
+    `src/config/adIds.js` et passer `USE_TEST_ADS` à `false`.
+  - **Sur web** (`utils/ads.web.ts`) : aucun SDK pub ne tourne dans un
+    navigateur, donc **mock** — `showRewardedAd` y simule la même forme
+    asynchrone "charger → afficher → récompenser" qu'un vrai SDK.
+  - **App Tracking Transparency** (`utils/tracking.ts`, iOS uniquement) —
+    demandée une fois avant la première pub. Ce module-là utilise un
+    `import()` dynamique (suffisant dans son cas, car son code ne touche
+    pas d'internes React Native au niveau module) plutôt que le
+    découpage par fichier de plateforme.
 - **Indice 💡 par déduction logique** (`engine/deduction.ts`) — l'indice ne
   révèle plus directement une case de la solution cachée : il assombrit
   l'écran et met en surbrillance uniquement ce qu'un joueur attentif aurait
@@ -410,15 +425,19 @@ npx eas-cli build --platform android
   n'est plus garantie *strictement* unique (voir §3) — c'est un compromis
   assumé pour rester rapide jusqu'à 16×16 plutôt qu'un bug ; le niveau
   reste toujours entièrement valide et jouable.
-- Les publicités récompensées (§1) sont un mock — voir
-  `utils/ads.ts` pour ce qu'il reste à faire pour un vrai SDK
-  (`react-native-google-mobile-ads`, build natif EAS, compte AdMob).
-- Préparation à la soumission sur les stores : `app.json` a ses
-  identifiants natifs (`bundleIdentifier`/`package`
-  `com.darchevert.zombidoku`) et le plugin App Tracking Transparency
-  (`src/utils/tracking.ts`, appelé avant chaque pub — mock ou réelle) ;
-  `eas.json` a des profils de build de base ; `public/privacy.html` est
-  une politique de confidentialité prête à héberger (à compléter avant
-  publication) ; `docs/store-submission.md` regroupe le texte de fiche
+- Les publicités récompensées (§1) tournent sur le vrai SDK AdMob sur
+  iOS/Android, mais avec les identifiants de **test** de Google — voir
+  `src/config/adIds.js` pour passer aux vrais identifiants une fois créés.
+  Jamais testé sur un vrai appareil (aucun build natif n'a encore été
+  fait), et la conformité GDPR/UMP pour l'UE reste à faire (voir
+  `utils/ads.ts`).
+- Préparation à la soumission sur les stores : `app.config.ts` (remplace
+  l'ancien `app.json` statique, pour partager les identifiants AdMob avec
+  `src/config/adIds.js`) a ses identifiants natifs
+  (`bundleIdentifier`/`package` `com.darchevert.zombidoku`) et les plugins
+  App Tracking Transparency + AdMob ; `eas.json` a des profils de build de
+  base ; `public/privacy.html` est une politique de confidentialité prête
+  à héberger (à compléter avant publication) ; `docs/store-submission.md`
+  regroupe le texte de fiche
   store et les réponses aux formulaires "Sécurité des données"/"App
   Privacy" des deux consoles.

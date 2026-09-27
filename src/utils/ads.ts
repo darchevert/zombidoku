@@ -1,45 +1,85 @@
-/** Rewarded-ad integration point.
+/** Rewarded-ad integration point — iOS/Android implementation.
  *
- * THIS IS A MOCK. A real rewarded ad needs a native ad SDK (e.g.
- * `react-native-google-mobile-ads` + AdMob ad unit IDs) wired up as an
- * Expo config plugin and built via EAS — none of which can be installed,
- * compiled, or tested in this sandboxed, browser-only dev environment (no
- * native build tooling, no device, no AdMob account with an app/ad units
- * created in it yet). Shipping an unverifiable native SDK integration
- * blind was judged worse than being upfront about it: `showRewardedAd`
- * below simulates the same async "load → show → reward" shape a real SDK
- * call would have, so swapping in the real implementation later is a
- * one-function change, not a redesign of the calling code in GameScreen.
+ * Wired to the real `react-native-google-mobile-ads` SDK, currently
+ * pointed at Google's official TEST ad unit (`TestIds.REWARDED` — see
+ * src/config/adIds.js's `USE_TEST_ADS` flag). Test ads are real,
+ * clearly-labeled ads served by Google's own inventory — they exercise
+ * the full load/show/reward flow, they just never pay out and would fail
+ * store review as the *only* ad integration. Once real AdMob apps and a
+ * rewarded ad unit exist (see docs/store-submission.md §1), fill in
+ * `ANDROID_REWARDED_UNIT_ID`/`IOS_REWARDED_UNIT_ID` in src/config/adIds.js
+ * and flip `USE_TEST_ADS` to `false` — nothing here needs to change.
  *
- * What's already wired in ahead of the real SDK, since it doesn't depend
- * on which ad network is used:
- * - App Tracking Transparency (`ensureTrackingPermission`, iOS only) —
- *   asked once, right before the first ad, so a real AdMob integration
- *   already has a permission answer to read.
+ * This file is deliberately NOT imported on web: see ads.web.ts, picked
+ * automatically by Metro's platform-extension resolution instead. A
+ * static top-level import of the ad SDK here is safe on iOS/Android, but
+ * would break the web *bundle* (not just crash at runtime) if this file
+ * were ever bundled for web — one of the SDK's modules statically
+ * imports React Native's native codegen internals, which Metro refuses
+ * to bundle for web outright, before any code even runs. Splitting by
+ * platform file, rather than an in-file `Platform.OS` check or a dynamic
+ * `import()` (which still isn't enough here — Metro traces a dynamic
+ * import's own module graph too), keeps this file's real SDK usage
+ * completely out of the web bundle's dependency graph.
  *
- * Still missing for a real EU/France launch, beyond the SDK itself:
- * - A GDPR/ePrivacy consent flow (Google's User Messaging Platform SDK)
- *   — ATT alone covers Apple's requirement, not the EU's separate consent
- *   requirement for ad identifiers. This needs its own native SDK +
- *   config, same "can't verify blind" reasoning as the ad SDK itself.
- *
- * To go live: install `react-native-google-mobile-ads`, configure it as
- * an Expo config plugin in app.json, create a rewarded ad unit in the
- * AdMob account (an app must exist there first — see README), add the
- * UMP consent flow, and replace the body of `showRewardedAd` with the
- * SDK's load/show calls, resolving `true` only from its actual reward
- * callback.
+ * Still missing before a real EU/France launch, beyond real ad unit IDs:
+ * - A GDPR/ePrivacy consent flow (Google's User Messaging Platform,
+ *   exposed by this SDK as `AdsConsent`) — App Tracking Transparency
+ *   (utils/tracking.ts) covers Apple's requirement, not the EU's
+ *   separate consent requirement for ad identifiers.
  */
 
+import { Platform } from 'react-native';
+import mobileAds, { RewardedAd, RewardedAdEventType, AdEventType, TestIds } from 'react-native-google-mobile-ads';
 import { ensureTrackingPermission } from './tracking';
+import { USE_TEST_ADS, ANDROID_REWARDED_UNIT_ID, IOS_REWARDED_UNIT_ID } from '../config/adIds';
 
-const MOCK_AD_DURATION_MS = 1500;
+// Only ever read once USE_TEST_ADS is flipped to false — an empty string
+// here before the real units are created in the AdMob console doesn't
+// matter until then.
+const REAL_UNIT_IDS = { android: ANDROID_REWARDED_UNIT_ID, ios: IOS_REWARDED_UNIT_ID };
 
-/** Resolves `true` once the (simulated) rewarded ad has been watched to
- * completion, `false` if it was skipped/failed to load. Never rejects. */
+let mobileAdsInitPromise: Promise<unknown> | null = null;
+
+/** Resolves `true` once a rewarded ad has been watched to completion and
+ * the reward earned, `false` if it failed to load, errored, or was
+ * closed early. Never rejects. */
 export async function showRewardedAd(): Promise<boolean> {
   await ensureTrackingPermission();
+
+  if (!mobileAdsInitPromise) {
+    // Coalesced so a second ad request before the first finishes
+    // initializing doesn't call initialize() twice.
+    mobileAdsInitPromise = mobileAds().initialize();
+  }
+  await mobileAdsInitPromise;
+
+  const adUnitId = USE_TEST_ADS ? TestIds.REWARDED : Platform.select(REAL_UNIT_IDS)!;
+
   return new Promise((resolve) => {
-    setTimeout(() => resolve(true), MOCK_AD_DURATION_MS);
+    const rewarded = RewardedAd.createForAdRequest(adUnitId);
+    let earnedReward = false;
+    let settled = false;
+
+    function finish(result: boolean) {
+      if (settled) return;
+      settled = true;
+      unsubscribeLoaded();
+      unsubscribeEarned();
+      unsubscribeError();
+      unsubscribeClosed();
+      resolve(result);
+    }
+
+    const unsubscribeLoaded = rewarded.addAdEventListener(RewardedAdEventType.LOADED, () => {
+      rewarded.show().catch(() => finish(false));
+    });
+    const unsubscribeEarned = rewarded.addAdEventListener(RewardedAdEventType.EARNED_REWARD, () => {
+      earnedReward = true;
+    });
+    const unsubscribeError = rewarded.addAdEventListener(AdEventType.ERROR, () => finish(false));
+    const unsubscribeClosed = rewarded.addAdEventListener(AdEventType.CLOSED, () => finish(earnedReward));
+
+    rewarded.load();
   });
 }

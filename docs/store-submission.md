@@ -13,9 +13,12 @@ deviner à ta place est marqué **[À COMPLÉTER]**.
       fois déployée : `https://darchevert.github.io/zombidoku/privacy.html`
 - [ ] Créer une app dans ton compte AdMob existant (Android **et** iOS —
       ce sont deux apps distinctes côté AdMob même si c'est un seul jeu),
-      puis créer un bloc "Récompensé" (Rewarded) sur chacune. Donne-moi
-      les App ID et Ad Unit ID une fois créés, j'intègre le vrai SDK à la
-      place du mock.
+      puis créer un bloc "Récompensé" (Rewarded) sur chacune. Le SDK réel
+      (`react-native-google-mobile-ads`) est déjà intégré et fonctionne
+      avec les identifiants de **test** publics de Google en attendant —
+      donne-moi les 2 App ID et 2 Ad Unit ID une fois créés : il suffit de
+      les coller dans `src/config/adIds.js` et de passer `USE_TEST_ADS` à
+      `false`, rien d'autre à changer dans le code.
 
 ## 2. Fiche store (à copier tel quel, ajuster si besoin)
 
