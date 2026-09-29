@@ -31,6 +31,11 @@ const config: ExpoConfig = {
   web: {
     favicon: './assets/favicon.png',
   },
+  extra: {
+    eas: {
+      projectId: '03395c33-adff-4734-8fcd-3abb7f2afa1d',
+    },
+  },
   plugins: [
     [
       'expo-tracking-transparency',
