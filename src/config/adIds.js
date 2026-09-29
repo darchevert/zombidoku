@@ -16,16 +16,24 @@
 
 const USE_TEST_ADS = true;
 
-const ANDROID_APP_ID = 'ca-app-pub-3940256099942544~3347511713';
-const IOS_APP_ID = 'ca-app-pub-3940256099942544~1458002511';
+const TEST_ANDROID_APP_ID = 'ca-app-pub-3940256099942544~3347511713';
+const TEST_IOS_APP_ID = 'ca-app-pub-3940256099942544~1458002511';
+
+// Real IDs from the AdMob console (Zombidoku Android / iOS). Only used once
+// USE_TEST_ADS is false.
+const REAL_ANDROID_APP_ID = 'ca-app-pub-5218071664586608~1360475200';
+const REAL_IOS_APP_ID = 'ca-app-pub-5218071664586608~3031901099';
+
+const ANDROID_APP_ID = USE_TEST_ADS ? TEST_ANDROID_APP_ID : REAL_ANDROID_APP_ID;
+const IOS_APP_ID = USE_TEST_ADS ? TEST_IOS_APP_ID : REAL_IOS_APP_ID;
 
 // Real rewarded ad unit IDs, once created (one per platform — an AdMob
 // ad unit belongs to a specific app). Ignored entirely while
 // USE_TEST_ADS is true, which uses the SDK's own TestIds.REWARDED
 // instead (see utils/ads.ts) rather than duplicating Google's test unit
 // IDs here.
-const ANDROID_REWARDED_UNIT_ID = '';
-const IOS_REWARDED_UNIT_ID = '';
+const ANDROID_REWARDED_UNIT_ID = 'ca-app-pub-5218071664586608/6201738344';
+const IOS_REWARDED_UNIT_ID = 'ca-app-pub-5218071664586608/1165034087';
 
 module.exports = {
   USE_TEST_ADS,

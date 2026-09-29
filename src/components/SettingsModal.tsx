@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, StyleSheet, Switch, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { useGameStore } from '../state/store';
+import { privacyOptionsRequired, showPrivacyOptions } from '../utils/ads';
 import { PressableScale } from './PressableScale';
 
 interface SettingsModalProps {
@@ -20,6 +21,10 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
   const toggleZenMode = useGameStore((s) => s.toggleZenMode);
   const timerModeEnabled = useGameStore((s) => s.timerModeEnabled);
   const toggleTimerMode = useGameStore((s) => s.toggleTimerMode);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  useEffect(() => {
+    if (visible) privacyOptionsRequired().then(setShowPrivacy);
+  }, [visible]);
 
   return (
     <Modal visible={visible} transparent animationType="slide">
@@ -37,6 +42,11 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
           <Row label="Vibrations" value={hapticsEnabled} onToggle={toggleHaptics} />
           <Row label="Mode Zen (sans vies)" value={zenModeEnabled} onToggle={toggleZenMode} />
           <Row label="Mode chrono" value={timerModeEnabled} onToggle={toggleTimerMode} />
+          {showPrivacy && (
+            <PressableScale style={styles.row} onPress={showPrivacyOptions}>
+              <Text style={styles.rowLabel}>Confidentialité et publicités</Text>
+            </PressableScale>
+          )}
         </View>
       </View>
     </Modal>

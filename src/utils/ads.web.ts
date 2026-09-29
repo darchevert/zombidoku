@@ -15,3 +15,9 @@ export function showRewardedAd(): Promise<boolean> {
     setTimeout(() => resolve(true), MOCK_AD_DURATION_MS);
   });
 }
+
+export async function privacyOptionsRequired(): Promise<boolean> {
+  return false;
+}
+
+export async function showPrivacyOptions(): Promise<void> {}

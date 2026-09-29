@@ -22,15 +22,20 @@
  * import's own module graph too), keeps this file's real SDK usage
  * completely out of the web bundle's dependency graph.
  *
- * Still missing before a real EU/France launch, beyond real ad unit IDs:
- * - A GDPR/ePrivacy consent flow (Google's User Messaging Platform,
- *   exposed by this SDK as `AdsConsent`) — App Tracking Transparency
- *   (utils/tracking.ts) covers Apple's requirement, not the EU's
- *   separate consent requirement for ad identifiers.
+ * GDPR consent: `showRewardedAd` runs Google's UMP flow (`AdsConsent`)
+ * before the first request; the Settings screen re-opens it via
+ * `showPrivacyOptions` when the region requires that entry point.
  */
 
 import { Platform } from 'react-native';
-import mobileAds, { RewardedAd, RewardedAdEventType, AdEventType, TestIds } from 'react-native-google-mobile-ads';
+import mobileAds, {
+  AdsConsent,
+  AdsConsentPrivacyOptionsRequirementStatus,
+  RewardedAd,
+  RewardedAdEventType,
+  AdEventType,
+  TestIds,
+} from 'react-native-google-mobile-ads';
 import { ensureTrackingPermission } from './tracking';
 import { USE_TEST_ADS, ANDROID_REWARDED_UNIT_ID, IOS_REWARDED_UNIT_ID } from '../config/adIds';
 
@@ -46,6 +51,15 @@ let mobileAdsInitPromise: Promise<unknown> | null = null;
  * closed early. Never rejects. */
 export async function showRewardedAd(): Promise<boolean> {
   await ensureTrackingPermission();
+
+  // GDPR/UMP: shows Google's consent form when the user's region requires
+  // one, and only lets ads be requested once consent allows it.
+  try {
+    await AdsConsent.gatherConsent();
+    if (!(await AdsConsent.getConsentInfo()).canRequestAds) return false;
+  } catch {
+    return false;
+  }
 
   if (!mobileAdsInitPromise) {
     // Coalesced so a second ad request before the first finishes
@@ -82,4 +96,23 @@ export async function showRewardedAd(): Promise<boolean> {
 
     rewarded.load();
   });
+}
+
+/** True when UMP requires an entry point to re-open the privacy choices
+ * (EEA/UK users must be able to change their consent at any time). */
+export async function privacyOptionsRequired(): Promise<boolean> {
+  try {
+    const info = await AdsConsent.getConsentInfo();
+    return info.privacyOptionsRequirementStatus === AdsConsentPrivacyOptionsRequirementStatus.REQUIRED;
+  } catch {
+    return false;
+  }
+}
+
+export async function showPrivacyOptions(): Promise<void> {
+  try {
+    await AdsConsent.showPrivacyOptionsForm();
+  } catch {
+    // ignore
+  }
 }

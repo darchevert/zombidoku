@@ -6,19 +6,11 @@ deviner à ta place est marqué **[À COMPLÉTER]**.
 
 ## 1. Avant de commencer
 
-- [ ] Remplacer les `[À COMPLÉTER]` dans `public/privacy.html` (nom de
-      l'éditeur, adresse de contact, date), puis pousser sur la branche
-      pour que la page se déploie sur GitHub Pages.
-- [ ] URL de la politique de confidentialité à donner aux deux stores une
-      fois déployée : `https://darchevert.github.io/zombidoku/privacy.html`
-- [ ] Créer une app dans ton compte AdMob existant (Android **et** iOS —
-      ce sont deux apps distinctes côté AdMob même si c'est un seul jeu),
-      puis créer un bloc "Récompensé" (Rewarded) sur chacune. Le SDK réel
-      (`react-native-google-mobile-ads`) est déjà intégré et fonctionne
-      avec les identifiants de **test** publics de Google en attendant —
-      donne-moi les 2 App ID et 2 Ad Unit ID une fois créés : il suffit de
-      les coller dans `src/config/adIds.js` et de passer `USE_TEST_ADS` à
-      `false`, rien d'autre à changer dans le code.
+- [x] `public/privacy.html` rempli (éditeur, contact, date, 13+). URL à donner aux stores une fois la branche déployée sur GitHub Pages : `https://darchevert.github.io/zombidoku/privacy.html`
+- [x] Apps AdMob Android et iOS + un bloc Récompensé chacun créés ; IDs dans `src/config/adIds.js`
+- [x] Consentement RGPD (UMP) intégré dans `src/utils/ads.ts`
+- [ ] Vérifier dans AdMob (Confidentialité et messages) que le message européen couvre Zombidoku
+- [ ] Avant la soumission : passer `USE_TEST_ADS` à `false` dans `src/config/adIds.js`
 
 ## 2. Fiche store (à copier tel quel, ajuster si besoin)
 
