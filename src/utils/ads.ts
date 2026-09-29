@@ -28,20 +28,38 @@
  */
 
 import { Platform } from 'react-native';
-import mobileAds, {
-  AdsConsent,
-  AdsConsentPrivacyOptionsRequirementStatus,
-  RewardedAd,
-  RewardedAdEventType,
-  AdEventType,
-  TestIds,
-} from 'react-native-google-mobile-ads';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { ensureTrackingPermission } from './tracking';
 import { USE_TEST_ADS, ANDROID_REWARDED_UNIT_ID, IOS_REWARDED_UNIT_ID } from '../config/adIds';
 
-// Only ever read once USE_TEST_ADS is flipped to false — an empty string
-// here before the real units are created in the AdMob console doesn't
-// matter until then.
+type AdsModule = typeof import('react-native-google-mobile-ads');
+
+// The SDK is a native module: it does not exist inside Expo Go (only in an
+// EAS / dev-client build), and merely importing it there throws
+// "RNGoogleMobileAdsModule could not be found". So it is required lazily,
+// inside try/catch, and Expo Go falls back to a simulated ad.
+let sdk: AdsModule | null | undefined;
+function getSdk(): AdsModule | null {
+  if (sdk === undefined) {
+    // A try/catch is not enough on its own: Metro reports an error thrown
+    // while a module initialises as a fatal red screen in dev even when the
+    // caller catches it, so Expo Go must be detected up front instead.
+    if (Constants.executionEnvironment === ExecutionEnvironment.StoreClient) {
+      sdk = null;
+    } else {
+      try {
+        sdk = require('react-native-google-mobile-ads') as AdsModule;
+      } catch {
+        sdk = null;
+      }
+    }
+  }
+  return sdk;
+}
+
+const MOCK_AD_DURATION_MS = 1500;
+
+// Only ever read once USE_TEST_ADS is flipped to false.
 const REAL_UNIT_IDS = { android: ANDROID_REWARDED_UNIT_ID, ios: IOS_REWARDED_UNIT_ID };
 
 let mobileAdsInitPromise: Promise<unknown> | null = null;
@@ -50,6 +68,12 @@ let mobileAdsInitPromise: Promise<unknown> | null = null;
  * the reward earned, `false` if it failed to load, errored, or was
  * closed early. Never rejects. */
 export async function showRewardedAd(): Promise<boolean> {
+  const ads = getSdk();
+  if (!ads) {
+    return new Promise((resolve) => setTimeout(() => resolve(true), MOCK_AD_DURATION_MS));
+  }
+  const { AdsConsent, RewardedAd, RewardedAdEventType, AdEventType, TestIds } = ads;
+
   await ensureTrackingPermission();
 
   // GDPR/UMP: shows Google's consent form when the user's region requires
@@ -64,7 +88,7 @@ export async function showRewardedAd(): Promise<boolean> {
   if (!mobileAdsInitPromise) {
     // Coalesced so a second ad request before the first finishes
     // initializing doesn't call initialize() twice.
-    mobileAdsInitPromise = mobileAds().initialize();
+    mobileAdsInitPromise = ads.default().initialize();
   }
   await mobileAdsInitPromise;
 
@@ -101,9 +125,11 @@ export async function showRewardedAd(): Promise<boolean> {
 /** True when UMP requires an entry point to re-open the privacy choices
  * (EEA/UK users must be able to change their consent at any time). */
 export async function privacyOptionsRequired(): Promise<boolean> {
+  const ads = getSdk();
+  if (!ads) return false;
   try {
-    const info = await AdsConsent.getConsentInfo();
-    return info.privacyOptionsRequirementStatus === AdsConsentPrivacyOptionsRequirementStatus.REQUIRED;
+    const info = await ads.AdsConsent.getConsentInfo();
+    return info.privacyOptionsRequirementStatus === ads.AdsConsentPrivacyOptionsRequirementStatus.REQUIRED;
   } catch {
     return false;
   }
@@ -111,7 +137,7 @@ export async function privacyOptionsRequired(): Promise<boolean> {
 
 export async function showPrivacyOptions(): Promise<void> {
   try {
-    await AdsConsent.showPrivacyOptionsForm();
+    await getSdk()?.AdsConsent.showPrivacyOptionsForm();
   } catch {
     // ignore
   }
