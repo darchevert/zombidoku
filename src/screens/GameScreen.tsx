@@ -98,6 +98,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [grid, setGrid] = useState<CellState[][]>([]);
   const [loading, setLoading] = useState(true);
+  const [scrollLocked, setScrollLocked] = useState(false);
   // The hint overlay: `hintActive` drives the dimmed-screen effect,
   // `hintDeduction` holds what to highlight and what "Appliquer" will
   // commit. Kept open until the player applies or dismisses it — no
@@ -310,6 +311,9 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   const gestureModeRef = useRef<'add' | 'remove' | null>(null);
 
   function handleGestureStart(row: number, col: number) {
+    // Freeze the page scroll for the whole press: otherwise a vertical
+    // drag over the board scrolls the ScrollView instead of painting.
+    setScrollLocked(true);
     // The board is dimmed and inert while the hint overlay is open — the
     // player is meant to read it and tap Appliquer/Fermer, not keep
     // playing underneath it.
@@ -337,16 +341,19 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     gestureModeRef.current = mode;
     pushHistory();
     paintCell(row, col, mode === 'add' ? 'x' : 'empty');
+    if (mode === 'add') playIfEnabled('mark');
   }
 
   function handleGestureMove(row: number, col: number) {
     const mode = gestureModeRef.current;
     if (!mode) return;
+    if (mode === 'add' && grid[row]?.[col] === 'empty') playIfEnabled('mark');
     paintCell(row, col, mode === 'add' ? 'x' : 'empty');
   }
 
   function handleGestureEnd() {
     gestureModeRef.current = null;
+    setScrollLocked(false);
   }
 
   function firstUnsolvedRow(): number | null {
@@ -526,7 +533,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   return (
     <View style={styles.screen}>
       <Animated.View style={[styles.shakeArea, { transform: [{ translateX: shakeTranslate }] }]}>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={styles.content} scrollEnabled={!scrollLocked}>
           <View style={styles.inner}>
             <View style={[styles.chromeGroup, hintActive && styles.dimmedChrome]}>
               <TopBar
