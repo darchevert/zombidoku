@@ -5,3 +5,4 @@
 - `wtf-ghost.mp3`: "WTF! Ghost!" by Alexandr Zhelanov, CC BY 3.0. https://opengameart.org/content/wtf-ghost , https://soundcloud.com/alexandr-zhelanov
 
 These credits are also shown in the app (Settings screen), as CC BY requires.
+- `doll-house-ghosts.mp3`, `doll-house-halloween.mp3`, `doll-house-glockenspiel.mp3`: "Doll House" (Piano Ghosts / Piano Halloween / Glockenspiel) by Alexandr Zhelanov, CC BY 4.0. https://opengameart.org/content/doll-house

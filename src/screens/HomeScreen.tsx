@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { AVATAR_EMOJI, useGameStore } from '../state/store';
@@ -12,6 +12,7 @@ import { CompanionModal } from '../components/CompanionModal';
 import { PressableScale } from '../components/PressableScale';
 import { MAX_CONTENT_WIDTH } from '../theme/layout';
 import { useT } from '../i18n';
+import { HOME_TRACK_INDEX, playMusicForLevel, stopMusic } from '../utils/music';
 import { DifficultyBadge } from '../components/DifficultyBadge';
 import { DIFFICULTY_COLORS, levelDifficulty } from '../utils/levelConfig';
 
@@ -22,6 +23,13 @@ interface HomeScreenProps {
 
 export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
   const t = useT();
+  const musicOn = useGameStore((s) => s.musicVolume > 0);
+
+  // The home screen always has the same theme (Caper).
+  useEffect(() => {
+    playMusicForLevel('home', HOME_TRACK_INDEX);
+    return stopMusic;
+  }, [musicOn]);
   const level = useGameStore((s) => s.level);
   const avatar = useGameStore((s) => s.avatar);
   const streak = useGameStore((s) => s.streak);

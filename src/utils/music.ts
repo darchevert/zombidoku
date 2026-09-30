@@ -7,7 +7,13 @@ const tracks = [
   require('../../assets/music/doll-house-soft.mp3'),
   require('../../assets/music/doll-house-bright.mp3'),
   require('../../assets/music/wtf-ghost.mp3'),
+  require('../../assets/music/doll-house-ghosts.mp3'),
+  require('../../assets/music/doll-house-halloween.mp3'),
+  require('../../assets/music/doll-house-glockenspiel.mp3'),
 ];
+
+/** The home screen always plays this track (Caper). */
+export const HOME_TRACK_INDEX = 0;
 
 const INTRO_MS = 2000; // fade-in when a level's music starts
 const CROSSFADE_S = 3; // the loop restarts this long before the end, overlapping
@@ -108,12 +114,16 @@ function ensureTimer() {
  * (never the same as the previous level's), faded in and looped with a
  * crossfade. Calling it again for the same key while playing is a no-op,
  * so nothing ever swaps the track mid-level. No-op when music is off. */
-export function playMusicForLevel(key: string | number): void {
+export function playMusicForLevel(key: string | number, forcedIndex?: number): void {
   const { musicVolume } = useGameStore.getState();
   if (musicVolume <= 0) return;
   if (current && chosen?.key === key) return;
 
   stopMusic();
+  if (forcedIndex !== undefined && (!chosen || chosen.key !== key)) {
+    lastIndex = forcedIndex;
+    chosen = { key, index: forcedIndex };
+  }
   if (!chosen || chosen.key !== key) {
     let index = Math.floor(Math.random() * tracks.length);
     if (tracks.length > 1 && index === lastIndex) index = (index + 1) % tracks.length;
