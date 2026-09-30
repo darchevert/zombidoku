@@ -165,10 +165,20 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     setCelebration({ id: celebrationIdRef.current, word });
   }
 
+  /** A short, light tap on the phone for each cell touched; the stronger
+   * buzz is reserved for mistakes (see triggerWrongFeedback). */
+  function tickHaptic(kind: 'light' | 'medium' = 'light') {
+    if (!hapticsEnabled) return;
+    Haptics.impactAsync(
+      kind === 'light' ? Haptics.ImpactFeedbackStyle.Light : Haptics.ImpactFeedbackStyle.Medium
+    ).catch(() => {});
+  }
+
   /** A quick horizontal wobble plus a haptic buzz — the physical "no"
    * feedback for a wrong guess, on top of the red locked cross itself. */
   function triggerWrongFeedback() {
     if (hapticsEnabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
     }
     shakeAnim.setValue(0);
@@ -317,6 +327,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     if (col === puzzle.solution[row]) {
       setCell(row, col, 'zombie');
       playIfEnabled('correct');
+      tickHaptic('medium');
       triggerCelebration();
       return;
     }
@@ -376,12 +387,15 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     pushHistory();
     paintCell(row, col, mode === 'add' ? 'x' : 'empty');
     if (mode === 'add') playIfEnabled('mark');
+    tickHaptic();
   }
 
   function handleGestureMove(row: number, col: number) {
     const mode = gestureModeRef.current;
     if (!mode) return;
-    if (mode === 'add' && grid[row]?.[col] === 'empty') playIfEnabled('mark');
+    const cur = grid[row]?.[col];
+    if (mode === 'add' && cur === 'empty') playIfEnabled('mark');
+    if ((mode === 'add' && cur === 'empty') || (mode === 'remove' && cur === 'x')) tickHaptic();
     paintCell(row, col, mode === 'add' ? 'x' : 'empty');
   }
 
@@ -574,7 +588,13 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   return (
     <View style={styles.screen}>
       <Animated.View style={[styles.shakeArea, { transform: [{ translateX: shakeTranslate }] }]}>
-        <LockableScrollView ref={scrollRef} contentContainerStyle={styles.content}>
+        <LockableScrollView
+          ref={scrollRef}
+          contentContainerStyle={styles.content}
+          // No rubber-band: finger jitter on the board must never wobble the page.
+          bounces={false}
+          overScrollMode="never"
+        >
           <View style={styles.inner}>
             <View style={[styles.chromeGroup, hintActive && styles.dimmedChrome]}>
               <TopBar
