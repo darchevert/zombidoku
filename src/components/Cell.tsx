@@ -75,14 +75,14 @@ export function Cell({ state, regionId, conflict, highlight, dimmed, showCritter
   // The hint highlight pulses rather than sitting as a static border —
   // a fixed ring is easy to miss on a busy board, a breathing one draws
   // the eye without being distracting.
-  const pulseAnim = useRef(new Animated.Value(0.35)).current;
+  const pulseAnim = useRef(new Animated.Value(0.1)).current;
   useEffect(() => {
     if (!highlight) return;
-    pulseAnim.setValue(0.35);
+    pulseAnim.setValue(0.1);
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1, duration: 450, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 0.35, duration: 450, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 0.1, duration: 600, useNativeDriver: true }),
       ])
     );
     loop.start();
@@ -112,6 +112,21 @@ export function Cell({ state, regionId, conflict, highlight, dimmed, showCritter
         {state === 'x' && <XMark size={size} color="rgba(255,255,255,0.92)" />}
         {isWrong && <XMark size={size} color={colors.danger} />}
         {showCritter && <CritterPop size={size} />}
+        {/* Ghost preview of what "Appliquer" will place, fading in and out
+         * on the same pulse as the ring. */}
+        {highlight === 'x' && state === 'empty' && (
+          <Animated.View style={[styles.markWrap, styles.ghost, { opacity: pulseAnim }]} pointerEvents="none">
+            <XMark size={size} color="rgba(255,255,255,0.92)" />
+          </Animated.View>
+        )}
+        {highlight === 'zombie' && state !== 'zombie' && (
+          <Animated.Text
+            style={[styles.zombieEmoji, styles.ghost, { fontSize: size * 0.58, opacity: pulseAnim }]}
+            pointerEvents="none"
+          >
+            🧟
+          </Animated.Text>
+        )}
         {highlight && (
           <Animated.View
             pointerEvents="none"
@@ -172,6 +187,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   critter: {
+    position: 'absolute',
+  },
+  ghost: {
     position: 'absolute',
   },
 });

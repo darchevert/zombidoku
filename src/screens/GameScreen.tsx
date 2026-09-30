@@ -387,6 +387,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
       setHintDeduction(deduction);
     }
     setHintActive(true);
+    playIfEnabled('hint');
   }
 
   /** Commits everything the open hint overlay is highlighting — the ✕'s
@@ -405,6 +406,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
       }
       return next;
     });
+    playIfEnabled('bonus');
     if (hintDeduction.zombieCell) {
       playIfEnabled('correct');
       triggerCelebration();
@@ -427,6 +429,8 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     }
     setAutoCatsUsed((n) => n + 1);
     setCell(row, puzzle.solution[row], 'zombie');
+    playIfEnabled('bonus');
+    playIfEnabled('correct');
   }
 
   function sleep(ms: number) {
@@ -462,8 +466,10 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     pushHistory();
     for (const cell of picks) {
       setCritterCell(cell);
+      playIfEnabled('swoosh');
       await sleep(CRITTER_POP_MS);
       setCell(cell.row, cell.col, 'x');
+      playIfEnabled('bat');
       setCritterCell(null);
       await sleep(CRITTER_GAP_MS);
     }

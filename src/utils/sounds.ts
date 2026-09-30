@@ -6,6 +6,10 @@ const sources = {
   win: require('../../assets/sounds/win.wav'),
   lose: require('../../assets/sounds/lose.wav'),
   mark: require('../../assets/sounds/mark.wav'),
+  hint: require('../../assets/sounds/hint.wav'),
+  bonus: require('../../assets/sounds/bonus.wav'),
+  bat: require('../../assets/sounds/bat.wav'),
+  swoosh: require('../../assets/sounds/swoosh.wav'),
 } as const;
 
 export type SoundKey = keyof typeof sources;
