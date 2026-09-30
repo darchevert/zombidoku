@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { colors } from '../theme/colors';
 import { AVATAR_EMOJI, useGameStore } from '../state/store';
 import { DAILY_CHALLENGE_UNLOCK_LEVEL } from '../utils/levelConfig';
@@ -23,6 +23,11 @@ interface HomeScreenProps {
 
 export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
   const t = useT();
+  const { height } = useWindowDimensions();
+  // Scale the layout to the screen height so the whole page fits unscrolled.
+  const compact = height < 760;
+  const tiny = height < 640;
+  const cardHeight = Math.max(120, Math.min(210, Math.round(height * 0.25)));
   const musicOn = useGameStore((s) => s.musicVolume > 0);
 
   // The home screen always has the same theme (Caper).
@@ -65,9 +70,9 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
           </PressableScale>
         </View>
 
-        <View style={styles.cardsRow}>
+        <View style={[styles.cardsRow, compact && { marginTop: tiny ? 10 : 18 }]}>
           <PressableScale
-            style={[styles.card, styles.dailyCard]}
+            style={[styles.card, styles.dailyCard, { height: cardHeight }]}
             onPress={onPlayDaily}
             disabled={!dailyUnlocked}
           >
@@ -84,7 +89,10 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
             )}
           </PressableScale>
 
-          <PressableScale style={[styles.card, styles.streakCard]} onPress={() => setShowStreak(true)}>
+          <PressableScale
+            style={[styles.card, styles.streakCard, { height: cardHeight }]}
+            onPress={() => setShowStreak(true)}
+          >
             <Text style={[styles.cardTitle, styles.streakTitle]}>{t('home.nights')}</Text>
             <Text style={styles.cardIcon}>🌙</Text>
             <View style={styles.streakPill}>
@@ -118,17 +126,17 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
           <Text style={styles.companionChevron}>›</Text>
         </PressableScale>
 
-        <View style={styles.logoBlock}>
-          <Text style={styles.logoLine}>
+        <View style={[styles.logoBlock, compact && { marginTop: tiny ? 8 : 16 }]}>
+          <Text style={[styles.logoLine, compact && { fontSize: tiny ? 32 : 38 }]}>
             Z<Text style={styles.logoAccent}>O</Text>MBI
           </Text>
-          <Text style={styles.logoLine}>
+          <Text style={[styles.logoLine, compact && { fontSize: tiny ? 32 : 38 }]}>
             D<Text style={styles.logoSecondary}>O</Text>KU
           </Text>
         </View>
 
         <PressableScale
-          style={[styles.playButton, { backgroundColor: DIFFICULTY_COLORS[levelDifficulty(level).difficulty].bg }]}
+          style={[styles.playButton, compact && { marginTop: tiny ? 12 : 22 }, { backgroundColor: DIFFICULTY_COLORS[levelDifficulty(level).difficulty].bg }]}
           onPress={onPlay}
         >
           <Text style={styles.playButtonText}>{t('home.levelButton', { n: level })}</Text>
@@ -161,8 +169,8 @@ const styles = StyleSheet.create({
     maxWidth: MAX_CONTENT_WIDTH,
     alignSelf: 'center',
     paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 24,
+    paddingTop: 16,
+    paddingBottom: 16,
     alignItems: 'center',
   },
   topRow: {
@@ -212,7 +220,6 @@ const styles = StyleSheet.create({
     // line has room — flexbox's space-between doesn't grow the box to
     // fit content, so too-short a ratio here overflows text past the
     // card's rounded corner instead of clipping or wrapping it.
-    aspectRatio: 0.72,
     borderRadius: 22,
     padding: 16,
     alignItems: 'center',

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, Platform, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Board } from '../components/Board';
 import { TopBar } from '../components/TopBar';
@@ -105,6 +105,13 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   const [grid, setGrid] = useState<CellState[][]>([]);
   const t = useT();
   const musicOn = useGameStore((s) => s.musicVolume > 0);
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
+  // 4 power buttons of 64px must fit the width: shrink the gap on narrow phones.
+  const powerGap = Math.max(4, Math.min(24, Math.floor((windowWidth - 32 - 4 * 64) / 3)));
+  // Small phones: tighter spacing, and no rule cards (they need ~110px).
+  const compact = windowHeight < 720;
+  const hideRules = windowHeight < 620;
+  const [boardRoom, setBoardRoom] = useState<{ w: number; h: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   // One random track per level, kept for the whole level (retries and
@@ -596,8 +603,8 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
           bounces={false}
           overScrollMode="never"
         >
-          <View style={styles.inner}>
-            <View style={[styles.chromeGroup, hintActive && styles.dimmedChrome]}>
+          <View style={[styles.inner, compact && styles.innerCompact]}>
+            <View style={[styles.chromeGroup, compact && styles.chromeGroupCompact, hintActive && styles.dimmedChrome]}>
               <TopBar
                 titleLabel={daily ? t('game.alert') : t('common.level')}
                 titleValue={daily ? t('game.zombie') : String(activeLevel)}
@@ -621,10 +628,13 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
                 </Text>
               )}
 
-              <RuleCards />
+              {!hideRules && <RuleCards />}
             </View>
 
-            <View style={styles.boardArea}>
+            <View
+              style={styles.boardArea}
+              onLayout={(e) => setBoardRoom({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
+            >
               <Celebration trigger={celebration} />
               {loading || !puzzle ? (
                 <View style={styles.loading}>
@@ -644,6 +654,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
                   onCellGestureMove={handleGestureMove}
                   onCellGestureEnd={handleGestureEnd}
                   revealKey={`${activeLevel}-${attempt}`}
+                  maxSize={boardRoom ? Math.max(160, Math.min(boardRoom.w, boardRoom.h)) : undefined}
                 />
               )}
             </View>
@@ -659,7 +670,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
               </View>
             )}
 
-            <View style={[styles.powerRow, hintActive && styles.dimmedChrome]}>
+            <View style={[styles.powerRow, { gap: powerGap }, hintActive && styles.dimmedChrome]}>
               <PowerButton emoji="↩" onPress={handleUndo} disabled={!canUndo || hintActive} />
               <PowerButton emoji="🧟" {...powerButtonProps(autoCats, 'autoCat', handleAutoCat)} />
               <PowerButton emoji="💡" {...powerButtonProps(hints, 'hint', handleHint)} />
@@ -711,18 +722,28 @@ const styles = StyleSheet.create({
   shakeArea: {
     flex: 1,
   },
+  // The content always fills the screen (flexGrow) and the board takes the
+  // room left over, so everything fits without scrolling.
   content: {
-    paddingTop: 16,
-    paddingBottom: 32,
+    flexGrow: 1,
+    paddingTop: 12,
+    paddingBottom: 12,
     alignItems: 'center',
   },
   inner: {
+    flex: 1,
     width: '100%',
     maxWidth: MAX_CONTENT_WIDTH,
-    gap: 16,
+    gap: 12,
+  },
+  innerCompact: {
+    gap: 6,
   },
   chromeGroup: {
-    gap: 16,
+    gap: 12,
+  },
+  chromeGroupCompact: {
+    gap: 6,
   },
   // The hint overlay's screen-dim: everything outside the board's own
   // per-cell highlighting fades out, drawing the eye to what's lit up.
@@ -758,6 +779,10 @@ const styles = StyleSheet.create({
   },
   boardArea: {
     position: 'relative',
+    flex: 1,
+    minHeight: 160,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loading: {
     height: 300,
@@ -768,7 +793,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 24,
-    marginTop: 8,
+    marginTop: 4,
   },
   timer: {
     alignSelf: 'center',

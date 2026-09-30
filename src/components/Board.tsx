@@ -36,6 +36,9 @@ interface BoardProps {
   /** Changes whenever a genuinely new puzzle is loaded (not on every move)
    * — re-triggers the staggered reveal animation below. */
   revealKey: string | number;
+  /** Upper bound (px) for the board's side, so the whole game screen fits
+   * without scrolling whatever the screen height. */
+  maxSize?: number;
 }
 
 const REVEAL_DURATION_MS = 700;
@@ -53,13 +56,14 @@ export function Board({
   onCellGestureMove,
   onCellGestureEnd,
   revealKey,
+  maxSize,
 }: BoardProps) {
   const { width } = useWindowDimensions();
   // Larger grids need every pixel they can get for touch targets to stay
   // usable, so bigger boards claim more of the screen width.
   const margin = size >= 12 ? 16 : 24;
   const boardMax = 320 + size * 14;
-  const boardSize = Math.min(width - margin * 2, boardMax);
+  const boardSize = Math.min(width - margin * 2, boardMax, maxSize ?? Infinity);
   const cellSize = useMemo(() => Math.floor(boardSize / size), [boardSize, size]);
   const xHighlightKeys = useMemo(
     () => new Set((highlightXCells ?? []).map((p) => `${p.row},${p.col}`)),
