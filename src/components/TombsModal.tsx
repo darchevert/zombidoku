@@ -6,6 +6,7 @@ import { useT } from '../i18n';
 import { showRewardedAd } from '../utils/ads';
 import {
   BONUS_EMOJI,
+  BONUS_VALUE_BRAINS,
   TOMB_ODDS,
   TOMB_RULES,
   countBonuses,
@@ -100,16 +101,13 @@ export function TombsModal({ visible, onClose }: TombsModalProps) {
   }
 
   function odds(kind: TombKind): string {
-    if (kind === 'small') {
-      const o = TOMB_ODDS.small;
-      return t('tombs.smallOdds', { min: o.brainsMin, max: o.brainsMax, pct: Math.round(o.bonusChance * 100) });
-    }
-    const o = TOMB_ODDS.chest;
-    return t('tombs.chestOdds', {
+    const o = TOMB_ODDS[kind];
+    return t('tombs.odds', {
+      bonus: o.guaranteedBonuses,
       min: o.brainsMin,
       max: o.brainsMax,
-      bonus: o.guaranteedBonuses,
-      pct: Math.round(o.thirdBonusChance * 100),
+      pct: Math.round(o.extraBonusChance * 100),
+      next: kind === 'small' ? 2 : 3,
     });
   }
 
@@ -208,6 +206,7 @@ export function TombsModal({ visible, onClose }: TombsModalProps) {
               );
             })
           )}
+          {!reveal && <Text style={styles.footnote}>{t('tombs.bonusValue', { n: BONUS_VALUE_BRAINS })}</Text>}
         </PopCard>
       </View>
     </Modal>
@@ -346,6 +345,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
     color: colors.ink,
+  },
+  footnote: {
+    fontSize: 12,
+    color: colors.inkSoft,
+    textAlign: 'center',
   },
   revealBox: {
     alignItems: 'center',

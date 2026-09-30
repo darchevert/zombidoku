@@ -262,13 +262,15 @@ Les deux mécanismes de rétention quotidienne sont pleinement fonctionnels :
   4 🧠 / 30 %, difficile 6 🧠 / 55 %, expert 8 🧠 + 1 bonus garanti (25 %
   d’un second). Un niveau boss donne toujours au moins un bonus et 50 % de
   cerveaux en plus ; l’Alerte zombie en donne aussi un.
-- **Tombeaux** (`TombsModal.tsx`, bouton 🪦 de l’accueil) : un petit tombeau
-  gratuit par jour, 3 autres contre une pub récompensée (mobile seulement),
-  ou 8 🧠 ; un grand coffre une fois par jour contre une pub, ou 30 🧠. Les
-  probabilités sont affichées à l’écran. Les compteurs se remettent à zéro
-  chaque jour. Pas d’achat intégré pour l’instant : il faudrait des produits
-  configurés dans les stores et l’affichage des probabilités exigé par
-  Apple/Google pour les contenus aléatoires payants.
+- **Tombeaux** (`TombsModal.tsx`, bouton 🪦 de l’accueil) : un **tombeau** gratuit
+  par jour, 3 autres contre une pub récompensée (mobile seulement) ou 8 🧠 ;
+  un **cercueil** une fois par jour contre une pub, ou 30 🧠. Un tombeau
+  donne toujours 1 bonus + 3 à 5 🧠 et un cercueil 2 bonus + 20 à 26 🧠 ;
+  comme un bonus vaut environ 6 🧠, ce qu’on obtient vaut toujours plus que
+  ce qu’on a payé. Les probabilités sont affichées à l’écran et les compteurs
+  se remettent à zéro chaque jour. Pas d’achat intégré pour l’instant : il
+  faudrait des produits configurés dans les stores et l’affichage des
+  probabilités exigé par Apple/Google pour les contenus aléatoires payants.
 
 ### Animations
 
