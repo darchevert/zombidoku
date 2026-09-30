@@ -16,7 +16,7 @@ interface CelebrationProps {
 const HOLD_MS = 950;
 const FADE_MS = 220;
 
-/** A gold pill ("👏 Excellent ! 👏") that pops over the top of the board when
+/** A gold pill ("👏 Excellent ! 👏") that pops just above the board when
  * a zombie is correctly guessed. Solid background and border so it reads on
  * any cell color, and drawn above the board; it never blocks input. */
 export function Celebration({ trigger }: CelebrationProps) {
@@ -59,7 +59,9 @@ export function Celebration({ trigger }: CelebrationProps) {
 const styles = StyleSheet.create({
   wrap: {
     position: 'absolute',
-    top: 8,
+    // Sits just above the grid (over the bottom edge of the rule cards), so
+    // it never covers a cell the player may want to tap next.
+    top: -44,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -74,18 +76,18 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 3,
     borderColor: '#B98B12',
-    paddingVertical: 6,
-    paddingHorizontal: 18,
+    paddingVertical: 3,
+    paddingHorizontal: 14,
     shadowColor: '#000',
     shadowOpacity: 0.45,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
   },
   clap: {
-    fontSize: 22,
+    fontSize: 18,
   },
   word: {
-    fontSize: 22,
+    fontSize: 19,
     fontWeight: '900',
     color: colors.ink,
     letterSpacing: 0.3,
