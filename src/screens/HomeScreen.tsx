@@ -12,6 +12,8 @@ import { CompanionModal } from '../components/CompanionModal';
 import { PressableScale } from '../components/PressableScale';
 import { MAX_CONTENT_WIDTH } from '../theme/layout';
 import { useT } from '../i18n';
+import { TombsModal } from '../components/TombsModal';
+import { TOMB_RULES } from '../utils/rewards';
 import { HOME_TRACK_INDEX, playMusicForLevel, stopMusic } from '../utils/music';
 import { DifficultyBadge } from '../components/DifficultyBadge';
 import { DIFFICULTY_COLORS, levelDifficulty } from '../utils/levelConfig';
@@ -45,6 +47,13 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
   const [showStreak, setShowStreak] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showCompanion, setShowCompanion] = useState(false);
+  const [showTombs, setShowTombs] = useState(false);
+  const tombStatus = useGameStore((s) => s.tombStatus);
+  const tombUsage = useGameStore((s) => s.tombUsage);
+  const tombDay = useGameStore((s) => s.tombDay);
+  void tombUsage;
+  void tombDay;
+  const freeTombWaiting = tombStatus().smallFreeLeft > 0 && TOMB_RULES.small.freePerDay > 0;
 
   // The next not-yet-secured night — whether tonight's already claimed or
   // not, this is always the soonest one still up for grabs.
@@ -64,6 +73,11 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
         <View style={styles.topRow}>
           <PressableScale style={styles.avatarButton} onPress={() => setShowProfile(true)}>
             <Text style={styles.avatarEmoji}>{AVATAR_EMOJI[avatar]}</Text>
+          </PressableScale>
+          <PressableScale style={styles.tombsButton} onPress={() => setShowTombs(true)}>
+            <Text style={styles.tombsEmoji}>🪦</Text>
+            <Text style={styles.tombsLabel}>{t('tombs.title')}</Text>
+            {freeTombWaiting && <View style={styles.tombsDot} />}
           </PressableScale>
           <PressableScale style={styles.settingsButton} onPress={() => setShowSettings(true)}>
             <Text style={styles.settingsIcon}>⚙</Text>
@@ -148,6 +162,7 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
       <StreakModal visible={showStreak} onClose={() => setShowStreak(false)} />
       <SettingsModal visible={showSettings} onClose={() => setShowSettings(false)} />
       <CompanionModal visible={showCompanion} onClose={() => setShowCompanion(false)} />
+      <TombsModal visible={showTombs} onClose={() => setShowTombs(false)} />
     </View>
   );
 }
@@ -175,6 +190,7 @@ const styles = StyleSheet.create({
   },
   topRow: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
   },
@@ -190,6 +206,36 @@ const styles = StyleSheet.create({
   },
   avatarEmoji: {
     fontSize: 28,
+  },
+  tombsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    height: 48,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    backgroundColor: '#4A3B66',
+    borderWidth: 2,
+    borderColor: 'rgba(240, 194, 62, 0.45)',
+  },
+  tombsEmoji: {
+    fontSize: 20,
+  },
+  tombsLabel: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: colors.surface,
+  },
+  tombsDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    backgroundColor: colors.danger,
+    borderWidth: 2,
+    borderColor: colors.background,
   },
   settingsButton: {
     width: 48,

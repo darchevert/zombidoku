@@ -14,7 +14,8 @@ import { generatePuzzle } from '../engine/generator';
 import { findConflicts, isSolved } from '../engine/solver';
 import { findDeductions, type Deduction } from '../engine/deduction';
 import type { CellState, Puzzle } from '../engine/types';
-import { levelToSize, scoreForCompletion } from '../utils/levelConfig';
+import { levelDifficulty, levelToSize, scoreForCompletion } from '../utils/levelConfig';
+import { rollLevelReward, type BonusKind } from '../utils/rewards';
 import { DAILY_CHALLENGE_BRAIN_REWARD, DAILY_CHALLENGE_SIZE, generateDailyPuzzle } from '../utils/dailyChallenge';
 import { playSound } from '../utils/sounds';
 import { showRewardedAd } from '../utils/ads';
@@ -32,7 +33,6 @@ import { playMusicForLevel, resetMusicChoice, stopMusic } from '../utils/music';
 // never show a real ad there once the mock is swapped for the real one.
 const ADS_SUPPORTED = Platform.OS !== 'web';
 
-const BRAIN_REWARD = 3;
 // How long the bat lingers on a cell before it swoops off and leaves the
 // ✕ behind — see handleMouse. Kept in step with CritterPop's own timing
 // in Cell.tsx (spring + 220ms hold + 140ms fade ≈ 450ms) so the mark
@@ -137,7 +137,11 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   const [won, setWon] = useState(false);
   const [lives, setLives] = useState(MAX_LIVES);
   const [lost, setLost] = useState(false);
-  const [lastReward, setLastReward] = useState({ score: 0, brains: 0 });
+  const [lastReward, setLastReward] = useState<{ score: number; brains: number; bonuses: BonusKind[] }>({
+    score: 0,
+    brains: 0,
+    bonuses: [],
+  });
   const [hintsUsed, setHintsUsed] = useState(0);
   const [autoCatsUsed, setAutoCatsUsed] = useState(0);
   // Feed the "you beat X% of your earlier games" popup stat.
@@ -256,13 +260,18 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     if (!puzzle || won || lost) return;
     if (isSolved(puzzle.size, puzzle.regions, zombies)) {
       const scoreEarned = scoreForCompletion(puzzle.size, hintsUsed, autoCatsUsed);
-      const brainsEarned = daily ? DAILY_CHALLENGE_BRAIN_REWARD : BRAIN_REWARD;
+      // Brains plus a difficulty-dependent chance of bonuses; the daily alert
+      // always drops one.
+      const drop = daily
+        ? { brains: DAILY_CHALLENGE_BRAIN_REWARD, bonuses: rollLevelReward('hard', true).bonuses }
+        : rollLevelReward(levelDifficulty(activeLevel).difficulty, levelDifficulty(activeLevel).boss);
+      const brainsEarned = drop.brains;
       if (daily) {
-        completeDailyChallenge({ scoreEarned, brainsEarned });
+        completeDailyChallenge({ scoreEarned, brainsEarned, bonuses: drop.bonuses });
       } else {
-        completeLevel({ scoreEarned, brainsEarned });
+        completeLevel({ scoreEarned, brainsEarned, bonuses: drop.bonuses });
       }
-      setLastReward({ score: scoreEarned, brains: brainsEarned });
+      setLastReward({ score: scoreEarned, brains: brainsEarned, bonuses: drop.bonuses });
       {
         const seconds = Math.min(600, Math.round((Date.now() - startedAtRef.current) / 1000));
         const bonuses = hintsUsed + autoCatsUsed + batsUsed;
@@ -686,6 +695,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
         title={daily ? t('win.dailyTitle') : t('win.title', { n: activeLevel })}
         scoreEarned={lastReward.score}
         brainsEarned={lastReward.brains}
+        bonuses={lastReward.bonuses}
         primaryLabel={daily ? t('common.home') : t('win.next')}
         onPrimary={
           daily

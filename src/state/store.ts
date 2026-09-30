@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { todayKey } from '../utils/date';
+import { rollTomb, TOMB_RULES, type BonusKind, type Reward, type TombKind } from '../utils/rewards';
 import { milestoneForDay, type StreakReward } from '../utils/streakRewards';
 import type { Lang } from '../i18n/translations';
 
@@ -55,13 +56,24 @@ interface GameState {
   hints: number;
   autoCats: number;
   mice: number;
-  completeLevel: (params: { scoreEarned: number; brainsEarned: number }) => void;
+  completeLevel: (params: { scoreEarned: number; brainsEarned: number; bonuses?: BonusKind[] }) => void;
+
+  // Tombs — a small free one per day, extra ones for a rewarded ad or
+  // brains, and a big chest (see utils/rewards for the odds).
+  tombDay: string;
+  tombUsage: { smallFree: number; smallAd: number; chestAd: number };
+  /** How many free / ad openings are left today for each tomb. */
+  tombStatus: () => { smallFreeLeft: number; smallAdLeft: number; chestAdLeft: number };
+  /** Opens a tomb and grants its reward; null if the payment isn't
+   * allowed (limit reached / not enough brains). The caller shows the ad
+   * first for payment 'ad'. */
+  openTomb: (kind: TombKind, payment: 'free' | 'ad' | 'brains') => Reward | null;
 
   // Daily challenge — a single shared puzzle per calendar day, separate
   // from level progression (doesn't advance `level`).
   dailyChallengeCompletedDate: string | null;
   hasCompletedDailyToday: () => boolean;
-  completeDailyChallenge: (params: { scoreEarned: number; brainsEarned: number }) => void;
+  completeDailyChallenge: (params: { scoreEarned: number; brainsEarned: number; bonuses?: BonusKind[] }) => void;
 
   // Power-ups
   useHint: () => boolean;
@@ -140,6 +152,18 @@ interface GameState {
 const HINT_COST_BRAINS = 3;
 const AUTOCAT_COST_BRAINS = 3;
 const MOUSE_COST_BRAINS = 3;
+/** The stock updates that add a list of bonuses to the player's counts. */
+function addBonuses(
+  s: { hints: number; autoCats: number; mice: number },
+  bonuses: BonusKind[]
+): { hints: number; autoCats: number; mice: number } {
+  return {
+    hints: s.hints + bonuses.filter((b) => b === 'hint').length,
+    autoCats: s.autoCats + bonuses.filter((b) => b === 'autoCat').length,
+    mice: s.mice + bonuses.filter((b) => b === 'bat').length,
+  };
+}
+
 const FEED_COST_BRAINS = 2;
 const FEED_XP_GAIN = 10;
 
@@ -158,22 +182,64 @@ export const useGameStore = create<GameState>()(
       hints: 5,
       autoCats: 5,
       mice: 5,
-      completeLevel: ({ scoreEarned, brainsEarned }) =>
+      completeLevel: ({ scoreEarned, brainsEarned, bonuses = [] }) =>
         set((s) => ({
           level: s.level + 1,
           score: s.score + scoreEarned,
           brains: s.brains + brainsEarned,
+          ...addBonuses(s, bonuses),
         })),
+
+      tombDay: todayKey(),
+      tombUsage: { smallFree: 0, smallAd: 0, chestAd: 0 },
+      tombStatus: () => {
+        const usage = get().tombDay === todayKey() ? get().tombUsage : { smallFree: 0, smallAd: 0, chestAd: 0 };
+        return {
+          smallFreeLeft: TOMB_RULES.small.freePerDay - usage.smallFree,
+          smallAdLeft: TOMB_RULES.small.adsPerDay - usage.smallAd,
+          chestAdLeft: TOMB_RULES.chest.adsPerDay - usage.chestAd,
+        };
+      },
+      openTomb: (kind, payment) => {
+        const today = todayKey();
+        const state = get();
+        const usage = state.tombDay === today ? { ...state.tombUsage } : { smallFree: 0, smallAd: 0, chestAd: 0 };
+        let brainCost = 0;
+        if (payment === 'free') {
+          if (kind !== 'small' || usage.smallFree >= TOMB_RULES.small.freePerDay) return null;
+          usage.smallFree += 1;
+        } else if (payment === 'ad') {
+          if (kind === 'small') {
+            if (usage.smallAd >= TOMB_RULES.small.adsPerDay) return null;
+            usage.smallAd += 1;
+          } else {
+            if (usage.chestAd >= TOMB_RULES.chest.adsPerDay) return null;
+            usage.chestAd += 1;
+          }
+        } else {
+          brainCost = TOMB_RULES[kind].brainCost;
+          if (state.brains < brainCost) return null;
+        }
+        const reward = rollTomb(kind);
+        set((s) => ({
+          tombDay: today,
+          tombUsage: usage,
+          brains: s.brains - brainCost + reward.brains,
+          ...addBonuses(s, reward.bonuses),
+        }));
+        return reward;
+      },
 
       dailyChallengeCompletedDate: null,
       hasCompletedDailyToday: () => get().dailyChallengeCompletedDate === todayKey(),
-      completeDailyChallenge: ({ scoreEarned, brainsEarned }) => {
+      completeDailyChallenge: ({ scoreEarned, brainsEarned, bonuses = [] }) => {
         const today = todayKey();
         if (get().dailyChallengeCompletedDate === today) return;
         set((s) => ({
           dailyChallengeCompletedDate: today,
           score: s.score + scoreEarned,
           brains: s.brains + brainsEarned,
+          ...addBonuses(s, bonuses),
         }));
       },
 

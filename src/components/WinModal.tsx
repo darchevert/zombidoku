@@ -4,6 +4,7 @@ import LottieView from 'lottie-react-native';
 import { colors } from '../theme/colors';
 import { PressableScale } from './PressableScale';
 import { useT } from '../i18n';
+import { BONUS_EMOJI, countBonuses, type BonusKind } from '../utils/rewards';
 
 const confettiSource = require('../../assets/lottie/confetti.json');
 
@@ -25,6 +26,8 @@ interface WinModalProps {
   title: string;
   scoreEarned: number;
   brainsEarned: number;
+  /** Bonuses dropped by this win (💡 🧟 🦇), shown next to the brains. */
+  bonuses?: BonusKind[];
   primaryLabel: string;
   onPrimary: () => void;
   /** Omit to show only the primary button (e.g. the daily challenge,
@@ -75,6 +78,7 @@ export function WinModal({
   title,
   scoreEarned,
   brainsEarned,
+  bonuses = [],
   primaryLabel,
   onPrimary,
   secondaryLabel,
@@ -215,6 +219,13 @@ export function WinModal({
             <Animated.View style={[styles.chip, popStyle(chips[1])]}>
               <Text style={styles.chipText}>+{brainsEarned} 🧠</Text>
             </Animated.View>
+            {countBonuses(bonuses).map(({ kind, n }) => (
+              <Animated.View key={kind} style={[styles.chip, styles.chipBonus, popStyle(chips[1])]}>
+                <Text style={styles.chipText}>
+                  +{n} {BONUS_EMOJI[kind]}
+                </Text>
+              </Animated.View>
+            ))}
           </View>
 
           {elapsedSeconds !== undefined && (
@@ -363,7 +374,9 @@ const styles = StyleSheet.create({
   },
   chipsRow: {
     flexDirection: 'row',
-    gap: 10,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
     marginTop: 4,
   },
   chip: {
@@ -371,6 +384,9 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingVertical: 7,
     paddingHorizontal: 16,
+  },
+  chipBonus: {
+    backgroundColor: 'rgba(240, 194, 62, 0.28)',
   },
   chipText: {
     fontSize: 16,
