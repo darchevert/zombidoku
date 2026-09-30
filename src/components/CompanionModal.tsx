@@ -4,6 +4,7 @@ import LottieView from 'lottie-react-native';
 import { colors } from '../theme/colors';
 import { useGameStore } from '../state/store';
 import { PressableScale } from './PressableScale';
+import { PopCard } from './PopCard';
 import {
   ACCESSORIES,
   COMPANION_MAX_LEVEL,
@@ -56,7 +57,7 @@ export function CompanionModal({ visible, onClose }: CompanionModalProps) {
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.backdrop}>
-        <View style={styles.card}>
+        <PopCard style={styles.card}>
           <View style={styles.header}>
             <Text style={styles.title}>{t('companion.title')}</Text>
             <PressableScale onPress={onClose} hitSlop={20}>
@@ -124,7 +125,7 @@ export function CompanionModal({ visible, onClose }: CompanionModalProps) {
               );
             })}
           </ScrollView>
-        </View>
+        </PopCard>
       </View>
     </Modal>
   );
@@ -158,9 +159,16 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   close: {
-    padding: 8,
-    fontSize: 20,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.surfaceMuted,
+    textAlign: 'center',
+    lineHeight: 34,
+    fontSize: 16,
+    fontWeight: '800',
     color: colors.ink,
+    overflow: 'hidden',
   },
   showcase: {
     alignItems: 'center',

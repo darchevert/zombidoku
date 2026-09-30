@@ -10,6 +10,7 @@ import {
   useGameStore,
 } from '../state/store';
 import { PressableScale } from './PressableScale';
+import { PopCard } from './PopCard';
 import { useT } from '../i18n';
 
 const FRAME_COLORS: Record<FrameId, string> = {
@@ -50,7 +51,7 @@ export function ProfileModal({ visible, onClose }: ProfileModalProps) {
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.backdrop}>
-        <View style={styles.card}>
+        <PopCard style={styles.card}>
           <View style={styles.header}>
             <Text style={styles.title}>{t('profile.title')}</Text>
             <PressableScale onPress={onClose} hitSlop={20}>
@@ -133,7 +134,7 @@ export function ProfileModal({ visible, onClose }: ProfileModalProps) {
           >
             <Text style={styles.confirmText}>{t('common.confirm')}</Text>
           </PressableScale>
-        </View>
+        </PopCard>
       </View>
     </Modal>
   );
@@ -167,9 +168,16 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   close: {
-    padding: 8,
-    fontSize: 20,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.surfaceMuted,
+    textAlign: 'center',
+    lineHeight: 34,
+    fontSize: 16,
+    fontWeight: '800',
     color: colors.ink,
+    overflow: 'hidden',
   },
   identityRow: {
     flexDirection: 'row',

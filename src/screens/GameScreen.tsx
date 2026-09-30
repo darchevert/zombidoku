@@ -22,6 +22,7 @@ import { useGameStore } from '../state/store';
 import { colors } from '../theme/colors';
 import { MAX_CONTENT_WIDTH } from '../theme/layout';
 import { useT } from '../i18n';
+import type { WinStats } from '../components/WinModal';
 import { playMusicForLevel, resetMusicChoice, stopMusic } from '../utils/music';
 
 // Rewarded ads need a native SDK (see utils/ads.ts) that can't run in a
@@ -127,6 +128,12 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   const [lastReward, setLastReward] = useState({ score: 0, brains: 0 });
   const [hintsUsed, setHintsUsed] = useState(0);
   const [autoCatsUsed, setAutoCatsUsed] = useState(0);
+  // Feed the "you beat X% of your earlier games" popup stat.
+  const [mistakes, setMistakes] = useState(0);
+  const [batsUsed, setBatsUsed] = useState(0);
+  const startedAtRef = useRef(Date.now());
+  const [winStats, setWinStats] = useState<WinStats | undefined>(undefined);
+  const recordPerformance = useGameStore((s) => s.recordPerformance);
 
   const lastTapRef = useRef<{ row: number; col: number; time: number } | null>(null);
   const shakeAnim = useRef(new Animated.Value(0)).current;
@@ -183,6 +190,9 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     setCritterCell(null);
     setHintsUsed(0);
     setAutoCatsUsed(0);
+    setMistakes(0);
+    setBatsUsed(0);
+    startedAtRef.current = Date.now();
     lastTapRef.current = null;
     historyRef.current = [];
     setCanUndo(false);
@@ -231,6 +241,12 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
         completeLevel({ scoreEarned, brainsEarned });
       }
       setLastReward({ score: scoreEarned, brains: brainsEarned });
+      {
+        const seconds = Math.min(600, Math.round((Date.now() - startedAtRef.current) / 1000));
+        const bonuses = hintsUsed + autoCatsUsed + batsUsed;
+        const { percent, sample } = recordPerformance(puzzle.size, mistakes * 45 + bonuses * 30 + seconds);
+        setWinStats({ percent, sample, size: puzzle.size, mistakes, bonuses });
+      }
       if (timerModeEnabled) {
         setLastElapsedSec(elapsedSec);
         setIsNewRecord(recordBestTime(puzzle.size, elapsedSec));
@@ -302,6 +318,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     }
 
     setCell(row, col, 'wrong');
+    setMistakes((n) => n + 1);
     triggerWrongFeedback();
     playIfEnabled('wrong');
     if (zenActive) return;
@@ -476,6 +493,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     const picks = candidates.slice(0, 3);
 
     setMouseBusy(true);
+    setBatsUsed((n) => n + 1);
     pushHistory();
     for (const cell of picks) {
       setCritterCell(cell);
@@ -643,6 +661,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
         onSecondary={daily ? undefined : onBack}
         elapsedSeconds={timerModeEnabled ? lastElapsedSec : undefined}
         isNewRecord={isNewRecord}
+        stats={winStats}
       />
 
       <LoseModal

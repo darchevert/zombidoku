@@ -117,6 +117,12 @@ interface GameState {
   timerModeEnabled: boolean;
   toggleTimerMode: () => void;
   bestTimeBySize: Record<number, number>;
+  /** Per grid size, the "cost" (lower is better: mistakes, bonuses used and
+   * seconds taken) of the player's recent wins — the yardstick for "you
+   * beat X% of your own earlier games". Never compared with other players. */
+  performanceHistory: Record<number, number[]>;
+  /** Stores this win and returns how it ranks against the earlier ones. */
+  recordPerformance: (size: number, cost: number) => { percent: number | null; sample: number };
   /** Returns true if this run beat (or set) the record for that size. */
   recordBestTime: (size: number, seconds: number) => boolean;
 
@@ -254,6 +260,17 @@ export const useGameStore = create<GameState>()(
       timerModeEnabled: false,
       toggleTimerMode: () => set((s) => ({ timerModeEnabled: !s.timerModeEnabled })),
       bestTimeBySize: {},
+      performanceHistory: {},
+      recordPerformance: (size, cost) => {
+        const previous = get().performanceHistory[size] ?? [];
+        const worse = previous.filter((c) => c > cost).length;
+        const equal = previous.filter((c) => c === cost).length;
+        const percent = previous.length >= 3 ? Math.round(((worse + equal / 2) / previous.length) * 100) : null;
+        set((s) => ({
+          performanceHistory: { ...s.performanceHistory, [size]: [...previous, cost].slice(-40) },
+        }));
+        return { percent, sample: previous.length };
+      },
       recordBestTime: (size, seconds) => {
         const current = get().bestTimeBySize[size];
         if (current !== undefined && current <= seconds) return false;

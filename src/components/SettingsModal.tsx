@@ -4,6 +4,7 @@ import { colors } from '../theme/colors';
 import { useGameStore } from '../state/store';
 import { privacyOptionsRequired, showPrivacyOptions } from '../utils/ads';
 import { PressableScale } from './PressableScale';
+import { PopCard } from './PopCard';
 import { LANGUAGES, useLanguage, useT } from '../i18n';
 
 interface SettingsModalProps {
@@ -38,7 +39,7 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.backdrop}>
-        <View style={styles.card}>
+        <PopCard style={styles.card}>
           <View style={styles.header}>
             <Text style={styles.title}>{t('settings.title')}</Text>
             <PressableScale onPress={onClose} hitSlop={20}>
@@ -76,7 +77,7 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
             Alexandr Zhelanov (Doll House, WTF! Ghost!) · Alex McCulloch (Caper)
           </Text>
           </ScrollView>
-        </View>
+        </PopCard>
       </View>
     </Modal>
   );
@@ -233,9 +234,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   close: {
-    padding: 8,
-    fontSize: 20,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: colors.surfaceMuted,
+    textAlign: 'center',
+    lineHeight: 34,
+    fontSize: 16,
+    fontWeight: '800',
     color: colors.ink,
+    overflow: 'hidden',
   },
   row: {
     flexDirection: 'row',
