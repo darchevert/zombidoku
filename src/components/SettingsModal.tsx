@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Switch, Text, View, useWindowDimensions } from 'react-native';
 import { colors } from '../theme/colors';
 import { useGameStore } from '../state/store';
 import { privacyOptionsRequired, showPrivacyOptions } from '../utils/ads';
@@ -27,6 +27,10 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
   const language = useGameStore((s) => s.language);
   const setLanguage = useGameStore((s) => s.setLanguage);
   const currentLang = useLanguage();
+  const { height: windowHeight } = useWindowDimensions();
+  const short = windowHeight < 640; // tighter spacing so it still fits
+  const [boxHeight, setBoxHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
   const [showPrivacy, setShowPrivacy] = useState(false);
   useEffect(() => {
     if (visible) privacyOptionsRequired().then(setShowPrivacy);
@@ -35,7 +39,7 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.backdrop}>
-        <PopCard style={styles.card}>
+        <PopCard style={[styles.card, short && styles.cardShort]}>
           <View style={styles.header}>
             <Text style={styles.title}>{t('settings.title')}</Text>
             <PressableScale onPress={onClose} hitSlop={20}>
@@ -43,18 +47,28 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
             </PressableScale>
           </View>
 
-          <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Only scrolls if the content really is taller than the card (tiny
+           * screens); otherwise everything is simply visible. */}
+          <ScrollView
+            style={{ flexShrink: 1 }}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            overScrollMode="never"
+            scrollEnabled={contentHeight > boxHeight + 1}
+            onLayout={(e) => setBoxHeight(e.nativeEvent.layout.height)}
+            onContentSizeChange={(_, h) => setContentHeight(h)}
+          >
           <VolumeBar label={t('settings.sfxVolume')} value={sfxVolume} onChange={setSfxVolume} />
           <VolumeBar label={t('settings.musicVolume')} value={musicVolume} onChange={setMusicVolume} />
-          <Row label={t('settings.haptics')} value={hapticsEnabled} onToggle={toggleHaptics} />
-          <Row label={t('settings.zen')} value={zenModeEnabled} onToggle={toggleZenMode} />
-          <Row label={t('settings.timer')} value={timerModeEnabled} onToggle={toggleTimerMode} />
+          <Row short={short} label={t('settings.haptics')} value={hapticsEnabled} onToggle={toggleHaptics} />
+          <Row short={short} label={t('settings.zen')} value={zenModeEnabled} onToggle={toggleZenMode} />
+          <Row short={short} label={t('settings.timer')} value={timerModeEnabled} onToggle={toggleTimerMode} />
           <Text style={styles.sectionLabel}>{t('settings.language')}</Text>
           <View style={styles.langWrap}>
             {LANGUAGES.map((l) => (
               <PressableScale
                 key={l.id}
-                style={[styles.langChip, currentLang === l.id && styles.langChipActive]}
+                style={[styles.langChip, short && styles.langChipShort, currentLang === l.id && styles.langChipActive]}
                 onPress={() => setLanguage(l.id)}
               >
                 <Text style={[styles.langText, currentLang === l.id && styles.langTextActive]}>{l.label}</Text>
@@ -117,13 +131,15 @@ function Row({
   label,
   value,
   onToggle,
+  short,
 }: {
   label: string;
   value: boolean;
   onToggle: () => void;
+  short?: boolean;
 }) {
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, short && { paddingVertical: 4, marginBottom: 4 }]}>
       <Text style={styles.rowLabel}>{label}</Text>
       <Switch
         value={value}
@@ -148,13 +164,13 @@ const styles = StyleSheet.create({
     maxHeight: '88%',
     backgroundColor: colors.surface,
     borderRadius: 24,
-    padding: 20,
+    padding: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   title: {
     fontSize: 22,
@@ -173,6 +189,14 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 8,
     marginBottom: 12,
+  },
+  cardShort: {
+    padding: 12,
+    maxHeight: '95%',
+  },
+  langChipShort: {
+    paddingVertical: 5,
+    paddingHorizontal: 12,
   },
   langChip: {
     paddingVertical: 8,
@@ -246,9 +270,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surfaceMuted,
     borderRadius: 12,
-    paddingVertical: 14,
+    paddingVertical: 10,
     paddingHorizontal: 16,
-    marginBottom: 10,
+    marginBottom: 6,
   },
   rowLabel: {
     fontSize: 16,
