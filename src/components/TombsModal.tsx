@@ -15,6 +15,7 @@ import {
 } from '../utils/rewards';
 import { PressableScale } from './PressableScale';
 import { PopCard } from './PopCard';
+import { ShopModal } from './ShopModal';
 
 const ADS_SUPPORTED = Platform.OS !== 'web';
 const TOMB_EMOJI: Record<TombKind, string> = { small: '🪦', chest: '⚰️' };
@@ -35,6 +36,7 @@ export function TombsModal({ visible, onClose }: TombsModalProps) {
   void tombDay;
 
   const status = tombStatus();
+  const [showShop, setShowShop] = useState(false);
   const [busy, setBusy] = useState<TombKind | null>(null);
   const [opening, setOpening] = useState<TombKind | null>(null);
   const [reveal, setReveal] = useState<{ kind: TombKind; reward: Reward } | null>(null);
@@ -207,7 +209,13 @@ export function TombsModal({ visible, onClose }: TombsModalProps) {
             })
           )}
           {!reveal && <Text style={styles.footnote}>{t('tombs.bonusValue', { n: BONUS_VALUE_BRAINS })}</Text>}
+          {!reveal && ADS_SUPPORTED && (
+            <PressableScale style={styles.shopButton} onPress={() => setShowShop(true)}>
+              <Text style={styles.shopText}>🛒 {t('shop.title')}</Text>
+            </PressableScale>
+          )}
         </PopCard>
+        <ShopModal visible={showShop} onClose={() => setShowShop(false)} />
       </View>
     </Modal>
   );
@@ -344,6 +352,21 @@ const styles = StyleSheet.create({
   brainText: {
     fontSize: 13,
     fontWeight: '800',
+    color: colors.ink,
+  },
+  shopButton: {
+    marginTop: 10,
+    alignSelf: 'stretch',
+    backgroundColor: colors.accentSecondary,
+    borderRadius: 999,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderBottomWidth: 3,
+    borderBottomColor: '#B98B12',
+  },
+  shopText: {
+    fontSize: 15,
+    fontWeight: '900',
     color: colors.ink,
   },
   footnote: {

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { todayKey } from '../utils/date';
+import { SHOP_PRODUCTS } from '../config/revenuecat';
 import { rollTomb, TOMB_RULES, type BonusKind, type Reward, type TombKind } from '../utils/rewards';
 import { milestoneForDay, type StreakReward } from '../utils/streakRewards';
 import type { Lang } from '../i18n/translations';
@@ -68,6 +69,12 @@ interface GameState {
    * allowed (limit reached / not enough brains). The caller shows the ad
    * first for payment 'ad'. */
   openTomb: (kind: TombKind, payment: 'free' | 'ad' | 'brains') => Reward | null;
+
+  // In-app purchases: transaction ids already granted, so a purchase is
+  // never credited twice.
+  processedPurchases: string[];
+  /** Credits the content of a purchased product; false if unknown or already granted. */
+  grantPurchase: (productId: string, transactionId: string) => boolean;
 
   // Daily challenge — a single shared puzzle per calendar day, separate
   // from level progression (doesn't advance `level`).
@@ -189,6 +196,20 @@ export const useGameStore = create<GameState>()(
           brains: s.brains + brainsEarned,
           ...addBonuses(s, bonuses),
         })),
+
+      processedPurchases: [],
+      grantPurchase: (productId, transactionId) => {
+        const product = SHOP_PRODUCTS.find((p) => p.id === productId);
+        if (!product || get().processedPurchases.includes(transactionId)) return false;
+        set((s) => ({
+          processedPurchases: [...s.processedPurchases, transactionId].slice(-200),
+          brains: s.brains + product.grant.brains,
+          hints: s.hints + product.grant.hints,
+          autoCats: s.autoCats + product.grant.autoCats,
+          mice: s.mice + product.grant.mice,
+        }));
+        return true;
+      },
 
       tombDay: todayKey(),
       tombUsage: { smallFree: 0, smallAd: 0, chestAd: 0 },
