@@ -7,8 +7,8 @@
 // builds instead of crashing.
 
 export const REVENUECAT_API_KEYS = {
-  ios: 'appl_XXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-  android: 'goog_XXXXXXXXXXXXXXXXXXXXXXXXXXX',
+  ios: 'appl_yvGTUijEeySKFFVQQalQjyogYxW',
+  android: 'goog_tfptjiNqRILEErewyEgxneQLDrb',
 };
 
 export function isRevenueCatConfigured(platformKey: string): boolean {
