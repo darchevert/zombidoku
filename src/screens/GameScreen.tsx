@@ -22,6 +22,7 @@ import { useGameStore } from '../state/store';
 import { colors } from '../theme/colors';
 import { MAX_CONTENT_WIDTH } from '../theme/layout';
 import { useT } from '../i18n';
+import { LockableScrollView, type LockableScrollViewHandle } from '../components/LockableScrollView';
 import type { WinStats } from '../components/WinModal';
 import { playMusicForLevel, resetMusicChoice, stopMusic } from '../utils/music';
 
@@ -112,10 +113,10 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     return stopMusic;
   }, [activeLevel, musicOn]);
   useEffect(() => resetMusicChoice, []);
-  // Freezing the page scroll while a finger paints the board. Done straight
-  // on the native view (no state) so it never re-renders the screen.
-  const scrollRef = useRef<ScrollView>(null);
-  const setScrollLocked = (locked: boolean) => scrollRef.current?.setNativeProps({ scrollEnabled: !locked });
+  // Freezing the page scroll while a finger paints the board; see
+  // LockableScrollView for why this doesn't re-render the screen.
+  const scrollRef = useRef<LockableScrollViewHandle>(null);
+  const setScrollLocked = (locked: boolean) => scrollRef.current?.lock(locked);
   // The hint overlay: `hintActive` drives the dimmed-screen effect,
   // `hintDeduction` holds what to highlight and what "Appliquer" will
   // commit. Kept open until the player applies or dismisses it — no
@@ -573,7 +574,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   return (
     <View style={styles.screen}>
       <Animated.View style={[styles.shakeArea, { transform: [{ translateX: shakeTranslate }] }]}>
-        <ScrollView ref={scrollRef} contentContainerStyle={styles.content}>
+        <LockableScrollView ref={scrollRef} contentContainerStyle={styles.content}>
           <View style={styles.inner}>
             <View style={[styles.chromeGroup, hintActive && styles.dimmedChrome]}>
               <TopBar
@@ -643,7 +644,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
               <PowerButton emoji="🦇" {...powerButtonProps(mice, 'mouse', handleMouse)} />
             </View>
           </View>
-        </ScrollView>
+        </LockableScrollView>
       </Animated.View>
 
       <WinModal
