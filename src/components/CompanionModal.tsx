@@ -4,7 +4,13 @@ import LottieView from 'lottie-react-native';
 import { colors } from '../theme/colors';
 import { useGameStore } from '../state/store';
 import { PressableScale } from './PressableScale';
-import { ACCESSORIES, companionProgress, companionTier } from '../utils/companion';
+import {
+  ACCESSORIES,
+  COMPANION_MAX_LEVEL,
+  companionProgress,
+  companionTier,
+  companionXpInLevel,
+} from '../utils/companion';
 import { useT } from '../i18n';
 
 const heartPopSource = require('../../assets/lottie/heart-pop.json');
@@ -28,6 +34,7 @@ export function CompanionModal({ visible, onClose }: CompanionModalProps) {
 
   const tier = companionTier(companionXp);
   const progress = companionProgress(companionXp);
+  const xpInLevel = companionXpInLevel(companionXp);
   const equippedEmoji = ACCESSORIES.find((a) => a.id === equippedAccessory)?.emoji;
 
   const heartRef = useRef<LottieView>(null);
@@ -66,6 +73,12 @@ export function CompanionModal({ visible, onClose }: CompanionModalProps) {
               {equippedEmoji && <Text style={styles.accessoryOverlay}>{equippedEmoji}</Text>}
             </Animated.View>
             <Text style={styles.companionName}>{t(`tier.${tier.level}`)}</Text>
+            <View style={styles.levelPill}>
+              <Text style={styles.levelPillText}>
+                {t('companion.level', { n: tier.level })}
+                {tier.level >= COMPANION_MAX_LEVEL ? ' · ' + t('companion.max') : ` · ${xpInLevel.current}/${xpInLevel.needed} XP`}
+              </Text>
+            </View>
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} />
             </View>
@@ -183,6 +196,19 @@ const styles = StyleSheet.create({
   accessoryOverlay: {
     fontSize: 32,
     marginBottom: 8,
+  },
+  levelPill: {
+    alignSelf: 'center',
+    backgroundColor: colors.accent,
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+  levelPillText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: colors.background,
   },
   companionName: {
     fontSize: 17,

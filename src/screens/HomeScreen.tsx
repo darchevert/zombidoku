@@ -96,7 +96,9 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
             {equippedEmoji && <Text style={styles.companionAccessory}>{equippedEmoji}</Text>}
           </View>
           <View style={styles.companionInfo}>
-            <Text style={styles.companionBannerName}>{t(`tier.${tier.level}`)}</Text>
+            <Text style={styles.companionBannerName}>
+              {t(`tier.${tier.level}`)} · {t('companion.level', { n: tier.level })}
+            </Text>
             <View style={styles.companionProgressTrack}>
               <View
                 style={[styles.companionProgressFill, { width: `${Math.round(progress * 100)}%` }]}

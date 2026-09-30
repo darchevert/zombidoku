@@ -25,6 +25,16 @@ export function companionLevel(xp: number): number {
   return Math.min(COMPANION_TIERS.length, Math.floor(xp / XP_PER_LEVEL) + 1);
 }
 
+/** XP earned inside the current level and what the level needs in total,
+ * e.g. { current: 20, needed: 50 } — both 0 once the last level is reached. */
+export function companionXpInLevel(xp: number): { current: number; needed: number } {
+  const level = companionLevel(xp);
+  if (level >= COMPANION_TIERS.length) return { current: 0, needed: 0 };
+  return { current: xp - (level - 1) * XP_PER_LEVEL, needed: XP_PER_LEVEL };
+}
+
+export const COMPANION_MAX_LEVEL = COMPANION_TIERS.length;
+
 export function companionTier(xp: number): CompanionTier {
   return COMPANION_TIERS[companionLevel(xp) - 1];
 }

@@ -78,6 +78,8 @@ const fr: Dict = {
 
   'companion.title': 'Compagnon',
   'companion.feed': 'Nourrir · {n} 🧠',
+  'companion.level': 'Niv. {n}',
+  'companion.max': 'Niveau max',
   'companion.accessories': 'Accessoires',
   'tier.1': 'Zombie débutant',
   'tier.2': 'Zombie qui titube',
@@ -182,6 +184,8 @@ const en: Dict = {
 
   'companion.title': 'Companion',
   'companion.feed': 'Feed · {n} 🧠',
+  'companion.level': 'Lv. {n}',
+  'companion.max': 'Max level',
   'companion.accessories': 'Accessories',
   'tier.1': 'Rookie zombie',
   'tier.2': 'Stumbling zombie',
@@ -286,6 +290,8 @@ const es: Dict = {
 
   'companion.title': 'Compañero',
   'companion.feed': 'Alimentar · {n} 🧠',
+  'companion.level': 'Nv. {n}',
+  'companion.max': 'Nivel máx.',
   'companion.accessories': 'Accesorios',
   'tier.1': 'Zombi novato',
   'tier.2': 'Zombi tambaleante',
@@ -390,6 +396,8 @@ const de: Dict = {
 
   'companion.title': 'Begleiter',
   'companion.feed': 'Füttern · {n} 🧠',
+  'companion.level': 'Lv. {n}',
+  'companion.max': 'Max. Level',
   'companion.accessories': 'Zubehör',
   'tier.1': 'Zombie-Anfänger',
   'tier.2': 'Torkelnder Zombie',
@@ -494,6 +502,8 @@ const it: Dict = {
 
   'companion.title': 'Compagno',
   'companion.feed': 'Nutri · {n} 🧠',
+  'companion.level': 'Liv. {n}',
+  'companion.max': 'Livello max',
   'companion.accessories': 'Accessori',
   'tier.1': 'Zombie principiante',
   'tier.2': 'Zombie barcollante',
@@ -598,6 +608,8 @@ const pt: Dict = {
 
   'companion.title': 'Companheiro',
   'companion.feed': 'Alimentar · {n} 🧠',
+  'companion.level': 'Nv. {n}',
+  'companion.max': 'Nível máx.',
   'companion.accessories': 'Acessórios',
   'tier.1': 'Zumbi novato',
   'tier.2': 'Zumbi cambaleante',
