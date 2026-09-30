@@ -12,6 +12,8 @@ import { CompanionModal } from '../components/CompanionModal';
 import { PressableScale } from '../components/PressableScale';
 import { MAX_CONTENT_WIDTH } from '../theme/layout';
 import { useT } from '../i18n';
+import { DifficultyBadge } from '../components/DifficultyBadge';
+import { DIFFICULTY_COLORS, levelDifficulty } from '../utils/levelConfig';
 
 interface HomeScreenProps {
   onPlay: () => void;
@@ -117,8 +119,12 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
           </Text>
         </View>
 
-        <PressableScale style={styles.playButton} onPress={onPlay}>
+        <PressableScale
+          style={[styles.playButton, { backgroundColor: DIFFICULTY_COLORS[levelDifficulty(level).difficulty].bg }]}
+          onPress={onPlay}
+        >
           <Text style={styles.playButtonText}>{t('home.levelButton', { n: level })}</Text>
+          <DifficultyBadge level={level} compact />
         </PressableScale>
       </ScrollView>
 
@@ -324,7 +330,9 @@ const styles = StyleSheet.create({
   playButton: {
     marginTop: 36,
     backgroundColor: colors.accent,
-    paddingVertical: 18,
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 14,
     paddingHorizontal: 56,
     borderRadius: 999,
     shadowColor: colors.accentDark,

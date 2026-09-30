@@ -22,6 +22,7 @@ import { useGameStore } from '../state/store';
 import { colors } from '../theme/colors';
 import { MAX_CONTENT_WIDTH } from '../theme/layout';
 import { useT } from '../i18n';
+import { DifficultyBadge } from '../components/DifficultyBadge';
 import { LockableScrollView, type LockableScrollViewHandle } from '../components/LockableScrollView';
 import type { WinStats } from '../components/WinModal';
 import { playMusicForLevel, resetMusicChoice, stopMusic } from '../utils/music';
@@ -605,6 +606,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
                 onSettings={onSettings}
               />
 
+              {!daily && <DifficultyBadge level={activeLevel} />}
               <ProgressBadges
                 zombiesPlaced={zombies.length}
                 zombiesTotal={size}

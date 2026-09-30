@@ -5,7 +5,40 @@
 const MIN_SIZE = 4;
 const MAX_SIZE = 16;
 
+/** Every 5th level (from level 5) is a boss: one grid size bigger than its
+ * neighbours, a real difficulty spike rather than just a label. */
+export function isBossLevel(level: number): boolean {
+  return level >= 5 && level % 5 === 0;
+}
+
 export function levelToSize(level: number): number {
+  const base = baseSizeForLevel(level);
+  return isBossLevel(level) ? Math.min(MAX_SIZE, base + 1) : base;
+}
+
+export type Difficulty = 'easy' | 'medium' | 'hard' | 'expert';
+
+/** Difficulty follows the grid size, the thing that really makes a level
+ * harder: up to 5x5 easy, 6-8 medium, 9-11 hard, 12+ expert. */
+export function difficultyForSize(size: number): Difficulty {
+  if (size <= 5) return 'easy';
+  if (size <= 8) return 'medium';
+  if (size <= 11) return 'hard';
+  return 'expert';
+}
+
+export function levelDifficulty(level: number): { difficulty: Difficulty; boss: boolean } {
+  return { difficulty: difficultyForSize(levelToSize(level)), boss: isBossLevel(level) };
+}
+
+export const DIFFICULTY_COLORS: Record<Difficulty, { bg: string; text: string }> = {
+  easy: { bg: '#8BC34A', text: '#241B33' },
+  medium: { bg: '#F0C23E', text: '#241B33' },
+  hard: { bg: '#E0554F', text: '#FFFFFF' },
+  expert: { bg: '#8A6BC9', text: '#FFFFFF' },
+};
+
+function baseSizeForLevel(level: number): number {
   let size = MIN_SIZE;
   let levelsUsedBySize = 0;
   let tierWidth = 2;
