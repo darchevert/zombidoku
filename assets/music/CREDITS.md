@@ -6,3 +6,4 @@
 
 These credits are also shown in the app (Settings screen), as CC BY requires.
 - `doll-house-ghosts.mp3`, `doll-house-halloween.mp3`, `doll-house-glockenspiel.mp3`: "Doll House" (Piano Ghosts / Piano Halloween / Glockenspiel) by Alexandr Zhelanov, CC BY 4.0. https://opengameart.org/content/doll-house
+- `ends-of-the-earth.mp3`: "Ends of the Earth" by neonarkade, CC0 (no attribution required, credited anyway). https://opengameart.org/content/ends-of-the-earth

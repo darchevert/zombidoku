@@ -10,6 +10,7 @@ const tracks = [
   require('../../assets/music/doll-house-ghosts.mp3'),
   require('../../assets/music/doll-house-halloween.mp3'),
   require('../../assets/music/doll-house-glockenspiel.mp3'),
+  require('../../assets/music/ends-of-the-earth.mp3'),
 ];
 
 /** The home screen always plays this track (Caper). */

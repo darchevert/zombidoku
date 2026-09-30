@@ -68,7 +68,7 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
           )}
           <Text style={styles.sectionLabel}>{t('settings.credits')}</Text>
           <Text style={styles.credits}>
-            Alexandr Zhelanov (Doll House, WTF! Ghost!) · Alex McCulloch (Caper)
+            Alexandr Zhelanov (Doll House, WTF! Ghost!) · Alex McCulloch (Caper) · neonarkade (Ends of the Earth)
           </Text>
           </ScrollView>
         </PopCard>
