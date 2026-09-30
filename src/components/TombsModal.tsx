@@ -6,7 +6,6 @@ import { useT } from '../i18n';
 import { showRewardedAd } from '../utils/ads';
 import {
   BONUS_EMOJI,
-  BONUS_VALUE_BRAINS,
   TOMB_ODDS,
   TOMB_RULES,
   countBonuses,
@@ -106,8 +105,6 @@ export function TombsModal({ visible, onClose }: TombsModalProps) {
     const o = TOMB_ODDS[kind];
     return t('tombs.odds', {
       bonus: o.guaranteedBonuses,
-      min: o.brainsMin,
-      max: o.brainsMax,
       pct: Math.round(o.extraBonusChance * 100),
       next: kind === 'small' ? 2 : 3,
     });
@@ -208,7 +205,6 @@ export function TombsModal({ visible, onClose }: TombsModalProps) {
               );
             })
           )}
-          {!reveal && <Text style={styles.footnote}>{t('tombs.bonusValue', { n: BONUS_VALUE_BRAINS })}</Text>}
           {!reveal && ADS_SUPPORTED && (
             <PressableScale style={styles.shopButton} onPress={() => setShowShop(true)}>
               <Text style={styles.shopText}>🛒 {t('shop.title')}</Text>

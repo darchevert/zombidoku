@@ -19,10 +19,6 @@ function randomBonus(rand: () => number): BonusKind {
   return BONUS_KINDS[Math.floor(rand() * BONUS_KINDS.length)];
 }
 
-function between(min: number, max: number, rand: () => number): number {
-  return min + Math.floor(rand() * (max - min + 1));
-}
-
 // ---------------------------------------------------------------- levels
 
 const LEVEL_TABLE: Record<Difficulty, { brains: number; bonusChance: number; extraChance: number }> = {
@@ -59,30 +55,20 @@ export const TOMB_RULES = {
   chest: { freePerDay: 0, adsPerDay: 1, brainCost: 30 },
 } as const;
 
-/** What one bonus is worth in brains, used to price the tombs: a tomb must
- * always be worth more than it costs, so every roll below pays at least
- * `brainCost` in brains-plus-bonus-value (checked in tombRewardValue). */
-export const BONUS_VALUE_BRAINS = 6;
-
 /** The odds shown to the player in the tombs screen (kept next to the roll
- * below so the two cannot drift apart). */
+ * below so the two cannot drift apart). A tomb only ever gives bonuses, never
+ * brains back: brains are the currency, so refunding them would let players
+ * open tombs forever. */
 export const TOMB_ODDS = {
-  // Costs 8: always 1 bonus (6) + 3-5 brains = 9 to 11 in value.
-  small: { guaranteedBonuses: 1, extraBonusChance: 0.2, brainsMin: 3, brainsMax: 5 },
-  // Costs 30: always 2 bonuses (12) + 20-26 brains = 32 to 38 in value.
-  chest: { guaranteedBonuses: 2, extraBonusChance: 0.15, brainsMin: 20, brainsMax: 26 },
+  small: { guaranteedBonuses: 1, extraBonusChance: 0.25 },
+  chest: { guaranteedBonuses: 3, extraBonusChance: 0.25 },
 } as const;
-
-/** Brains-equivalent value of a reward (bonuses counted at BONUS_VALUE_BRAINS). */
-export function tombRewardValue(reward: Reward): number {
-  return reward.brains + reward.bonuses.length * BONUS_VALUE_BRAINS;
-}
 
 export function rollTomb(kind: TombKind, rand: () => number = Math.random): Reward {
   const o = TOMB_ODDS[kind];
   const bonuses: BonusKind[] = Array.from({ length: o.guaranteedBonuses }, () => randomBonus(rand));
   if (rand() < o.extraBonusChance) bonuses.push(randomBonus(rand));
-  return { brains: between(o.brainsMin, o.brainsMax, rand), bonuses };
+  return { brains: 0, bonuses };
 }
 
 /** Counts per bonus kind, e.g. ['hint','hint','bat'] -> { hint: 2, bat: 1 }. */
