@@ -1,5 +1,5 @@
 import React, { forwardRef, useImperativeHandle, useState } from 'react';
-import { ScrollView, type ScrollViewProps } from 'react-native';
+import { Platform, ScrollView, type ScrollViewProps } from 'react-native';
 
 export interface LockableScrollViewHandle {
   lock: (locked: boolean) => void;
@@ -13,7 +13,9 @@ export interface LockableScrollViewHandle {
 export const LockableScrollView = forwardRef<LockableScrollViewHandle, ScrollViewProps>(
   function LockableScrollView(props, ref) {
     const [locked, setLocked] = useState(false);
-    useImperativeHandle(ref, () => ({ lock: setLocked }), []);
+    // On web a mouse drag never scrolls the page, and disabling scrolling
+    // there hides the scrollbar, which shifts the layout on every click.
+    useImperativeHandle(ref, () => ({ lock: (l: boolean) => Platform.OS !== 'web' && setLocked(l) }), []);
     return <ScrollView {...props} scrollEnabled={!locked} />;
   }
 );
