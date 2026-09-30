@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Switch, Text, View, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View, useWindowDimensions } from 'react-native';
 import { colors } from '../theme/colors';
 import { useGameStore } from '../state/store';
 import { privacyOptionsRequired, showPrivacyOptions } from '../utils/ads';
@@ -29,6 +29,7 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
   const currentLang = useLanguage();
   const { height: windowHeight } = useWindowDimensions();
   const short = windowHeight < 640; // tighter spacing so it still fits
+  const [langOpen, setLangOpen] = useState(false);
   const [boxHeight, setBoxHeight] = useState(0);
   const [contentHeight, setContentHeight] = useState(0);
   const [showPrivacy, setShowPrivacy] = useState(false);
@@ -63,18 +64,15 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
           <Row short={short} label={t('settings.haptics')} value={hapticsEnabled} onToggle={toggleHaptics} />
           <Row short={short} label={t('settings.zen')} value={zenModeEnabled} onToggle={toggleZenMode} />
           <Row short={short} label={t('settings.timer')} value={timerModeEnabled} onToggle={toggleTimerMode} />
-          <Text style={styles.sectionLabel}>{t('settings.language')}</Text>
-          <View style={styles.langWrap}>
-            {LANGUAGES.map((l) => (
-              <PressableScale
-                key={l.id}
-                style={[styles.langChip, short && styles.langChipShort, currentLang === l.id && styles.langChipActive]}
-                onPress={() => setLanguage(l.id)}
-              >
-                <Text style={[styles.langText, currentLang === l.id && styles.langTextActive]}>{l.label}</Text>
-              </PressableScale>
-            ))}
-          </View>
+          <PressableScale
+            style={[styles.row, short && { paddingVertical: 4, marginBottom: 4 }]}
+            onPress={() => setLangOpen(true)}
+          >
+            <Text style={styles.rowLabel}>{t('settings.language')}</Text>
+            <Text style={styles.langValue}>
+              {LANGUAGES.find((l) => l.id === currentLang)?.label} ▾
+            </Text>
+          </PressableScale>
           {showPrivacy && (
             <PressableScale style={styles.row} onPress={showPrivacyOptions}>
               <Text style={styles.rowLabel}>{t('settings.privacy')}</Text>
@@ -86,6 +84,27 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
           </Text>
           </ScrollView>
         </PopCard>
+
+        {/* The language "drop-down": a small list floating over the settings. */}
+        <Modal visible={langOpen} transparent animationType="fade" onRequestClose={() => setLangOpen(false)}>
+          <Pressable style={styles.dropBackdrop} onPress={() => setLangOpen(false)}>
+            <View style={styles.dropList}>
+              {LANGUAGES.map((l) => (
+                <PressableScale
+                  key={l.id}
+                  style={[styles.dropItem, currentLang === l.id && styles.dropItemActive]}
+                  onPress={() => {
+                    setLanguage(l.id);
+                    setLangOpen(false);
+                  }}
+                >
+                  <Text style={[styles.dropText, currentLang === l.id && styles.dropTextActive]}>{l.label}</Text>
+                  {currentLang === l.id && <Text style={styles.dropCheck}>✓</Text>}
+                </PressableScale>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
       </View>
     </Modal>
   );
@@ -184,36 +203,9 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 8,
   },
-  langWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
-  },
   cardShort: {
     padding: 12,
     maxHeight: '95%',
-  },
-  langChipShort: {
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-  },
-  langChip: {
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 999,
-    backgroundColor: colors.surfaceMuted,
-  },
-  langChipActive: {
-    backgroundColor: colors.accent,
-  },
-  langText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.ink,
-  },
-  langTextActive: {
-    color: colors.background,
   },
   volumeBox: {
     paddingHorizontal: 16,
@@ -251,6 +243,50 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.inkSoft,
     marginBottom: 8,
+  },
+  langValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.inkSoft,
+  },
+  dropBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 6, 16, 0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  dropList: {
+    width: '100%',
+    maxWidth: 300,
+    backgroundColor: colors.surface,
+    borderRadius: 18,
+    padding: 6,
+  },
+  dropItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  dropItemActive: {
+    backgroundColor: colors.accent,
+  },
+  dropText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.ink,
+  },
+  dropTextActive: {
+    color: colors.background,
+    fontWeight: '800',
+  },
+  dropCheck: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: colors.background,
   },
   close: {
     width: 34,
