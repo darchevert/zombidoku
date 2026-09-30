@@ -112,7 +112,10 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     return stopMusic;
   }, [activeLevel, musicEnabled, musicOn]);
   useEffect(() => resetMusicChoice, []);
-  const [scrollLocked, setScrollLocked] = useState(false);
+  // Freezing the page scroll while a finger paints the board. Done straight
+  // on the native view (no state) so it never re-renders the screen.
+  const scrollRef = useRef<ScrollView>(null);
+  const setScrollLocked = (locked: boolean) => scrollRef.current?.setNativeProps({ scrollEnabled: !locked });
   // The hint overlay: `hintActive` drives the dimmed-screen effect,
   // `hintDeduction` holds what to highlight and what "Appliquer" will
   // commit. Kept open until the player applies or dismisses it — no
@@ -570,7 +573,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   return (
     <View style={styles.screen}>
       <Animated.View style={[styles.shakeArea, { transform: [{ translateX: shakeTranslate }] }]}>
-        <ScrollView contentContainerStyle={styles.content} scrollEnabled={!scrollLocked}>
+        <ScrollView ref={scrollRef} contentContainerStyle={styles.content}>
           <View style={styles.inner}>
             <View style={[styles.chromeGroup, hintActive && styles.dimmedChrome]}>
               <TopBar
