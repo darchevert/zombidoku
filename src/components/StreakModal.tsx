@@ -4,6 +4,7 @@ import { colors } from '../theme/colors';
 import { useGameStore } from '../state/store';
 import { PressableScale } from './PressableScale';
 import { milestoneForDay, nextMilestoneDay, type StreakReward } from '../utils/streakRewards';
+import { useT } from '../i18n';
 
 interface StreakModalProps {
   visible: boolean;
@@ -14,6 +15,7 @@ const CALENDAR_SPAN = 7;
 
 export function StreakModal({ visible, onClose }: StreakModalProps) {
   const streak = useGameStore((s) => s.streak);
+  const t = useT();
   const claimStreak = useGameStore((s) => s.claimStreak);
   const canClaimStreak = useGameStore((s) => s.canClaimStreak);
   const [claimed, setClaimed] = useState(false);
@@ -65,22 +67,22 @@ export function StreakModal({ visible, onClose }: StreakModalProps) {
 
         <Text style={styles.caption}>
           {claimed
-            ? `${streak} nuit${streak > 1 ? 's' : ''} survécue${streak > 1 ? 's' : ''} !`
+            ? t('streak.survived', { n: streak })
             : alreadyClaimedToday
-            ? 'Nuit déjà survécue aujourd’hui'
-            : 'Touchez la lune,\nsurvivez à la nuit !'}
+            ? t('streak.alreadyClaimed')
+            : t('streak.tapMoon')}
         </Text>
 
         {claimed && wonReward && (
           <View style={styles.rewardPill}>
             <Text style={styles.rewardText}>
-              {wonReward.emoji} Bonus : {wonReward.label}
+              {wonReward.emoji} {t('streak.bonus', { label: t(wonReward.labelKey, wonReward.labelParams) })}
             </Text>
           </View>
         )}
 
         <View style={styles.calendarCard} pointerEvents="none">
-          <Text style={styles.calendarTitle}>Calendrier des bonus</Text>
+          <Text style={styles.calendarTitle}>{t('streak.calendar')}</Text>
           <View style={styles.calendarRow}>
             {calendarDays.map((day, i) => {
               const dayReward = milestoneForDay(day);
@@ -97,16 +99,19 @@ export function StreakModal({ visible, onClose }: StreakModalProps) {
           </View>
           <Text style={styles.calendarHint}>
             {daysUntilNext === 0 && nextReward
-              ? `Bonus ce soir : ${nextReward.emoji} ${nextReward.label}`
+              ? t('streak.bonusTonight', { reward: `${nextReward.emoji} ${t(nextReward.labelKey, nextReward.labelParams)}` })
               : nextReward
-              ? `Prochain bonus dans ${daysUntilNext} nuit${daysUntilNext > 1 ? 's' : ''} : ${nextReward.emoji} ${nextReward.label}`
+              ? t('streak.next', {
+                  n: daysUntilNext,
+                  reward: `${nextReward.emoji} ${t(nextReward.labelKey, nextReward.labelParams)}`,
+                })
               : null}
           </Text>
         </View>
 
         {claimed && (
           <PressableScale style={styles.doneButton} onPress={onClose}>
-            <Text style={styles.doneButtonText}>Continuer</Text>
+            <Text style={styles.doneButtonText}>{t('common.continue')}</Text>
           </PressableScale>
         )}
       </Pressable>

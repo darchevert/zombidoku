@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { colors, regionColor } from '../theme/colors';
 import type { CellState } from '../engine/types';
+import { useT } from '../i18n';
 
 interface CellProps {
   state: CellState;
@@ -67,6 +68,7 @@ function CritterPop({ size }: { size: number }) {
  * single PanResponder in Board (so a press-and-drag can paint across
  * cells), so this has no onPress of its own. */
 export function Cell({ state, regionId, conflict, highlight, dimmed, showCritter, size }: CellProps) {
+  const t = useT();
   const bg = regionColor(regionId);
   const gap = Math.max(1.5, size * 0.035);
   const radius = size * 0.22;
@@ -95,12 +97,12 @@ export function Cell({ state, regionId, conflict, highlight, dimmed, showCritter
       accessible
       accessibilityLabel={
         state === 'zombie'
-          ? 'Zombie'
+          ? t('cell.zombie')
           : state === 'wrong'
-          ? 'Erreur, case définitivement exclue'
+          ? t('cell.wrong')
           : state === 'x'
-          ? 'Case exclue'
-          : 'Case vide'
+          ? t('cell.x')
+          : t('cell.empty')
       }
     >
       <View

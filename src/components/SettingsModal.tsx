@@ -4,6 +4,7 @@ import { colors } from '../theme/colors';
 import { useGameStore } from '../state/store';
 import { privacyOptionsRequired, showPrivacyOptions } from '../utils/ads';
 import { PressableScale } from './PressableScale';
+import { LANGUAGES, useLanguage, useT } from '../i18n';
 
 interface SettingsModalProps {
   visible: boolean;
@@ -21,6 +22,10 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
   const toggleZenMode = useGameStore((s) => s.toggleZenMode);
   const timerModeEnabled = useGameStore((s) => s.timerModeEnabled);
   const toggleTimerMode = useGameStore((s) => s.toggleTimerMode);
+  const t = useT();
+  const language = useGameStore((s) => s.language);
+  const setLanguage = useGameStore((s) => s.setLanguage);
+  const currentLang = useLanguage();
   const [showPrivacy, setShowPrivacy] = useState(false);
   useEffect(() => {
     if (visible) privacyOptionsRequired().then(setShowPrivacy);
@@ -31,20 +36,32 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <View style={styles.header}>
-            <Text style={styles.title}>Réglages</Text>
-            <PressableScale onPress={onClose}>
+            <Text style={styles.title}>{t('settings.title')}</Text>
+            <PressableScale onPress={onClose} hitSlop={20}>
               <Text style={styles.close}>✕</Text>
             </PressableScale>
           </View>
 
-          <Row label="Sons" value={soundEnabled} onToggle={toggleSound} />
-          <Row label="Musique" value={musicEnabled} onToggle={toggleMusic} />
-          <Row label="Vibrations" value={hapticsEnabled} onToggle={toggleHaptics} />
-          <Row label="Mode Zen (sans vies)" value={zenModeEnabled} onToggle={toggleZenMode} />
-          <Row label="Mode chrono" value={timerModeEnabled} onToggle={toggleTimerMode} />
+          <Row label={t('settings.sounds')} value={soundEnabled} onToggle={toggleSound} />
+          <Row label={t('settings.music')} value={musicEnabled} onToggle={toggleMusic} />
+          <Row label={t('settings.haptics')} value={hapticsEnabled} onToggle={toggleHaptics} />
+          <Row label={t('settings.zen')} value={zenModeEnabled} onToggle={toggleZenMode} />
+          <Row label={t('settings.timer')} value={timerModeEnabled} onToggle={toggleTimerMode} />
+          <Text style={styles.sectionLabel}>{t('settings.language')}</Text>
+          <View style={styles.langWrap}>
+            {LANGUAGES.map((l) => (
+              <PressableScale
+                key={l.id}
+                style={[styles.langChip, currentLang === l.id && styles.langChipActive]}
+                onPress={() => setLanguage(l.id)}
+              >
+                <Text style={[styles.langText, currentLang === l.id && styles.langTextActive]}>{l.label}</Text>
+              </PressableScale>
+            ))}
+          </View>
           {showPrivacy && (
             <PressableScale style={styles.row} onPress={showPrivacyOptions}>
-              <Text style={styles.rowLabel}>Confidentialité et publicités</Text>
+              <Text style={styles.rowLabel}>{t('settings.privacy')}</Text>
             </PressableScale>
           )}
         </View>
@@ -100,7 +117,38 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.ink,
   },
+  sectionLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.inkSoft,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  langWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  langChip: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: colors.surfaceMuted,
+  },
+  langChipActive: {
+    backgroundColor: colors.accent,
+  },
+  langText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.ink,
+  },
+  langTextActive: {
+    color: colors.background,
+  },
   close: {
+    padding: 8,
     fontSize: 20,
     color: colors.ink,
   },

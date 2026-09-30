@@ -5,6 +5,7 @@ import { colors } from '../theme/colors';
 import { useGameStore } from '../state/store';
 import { PressableScale } from './PressableScale';
 import { ACCESSORIES, companionProgress, companionTier } from '../utils/companion';
+import { useT } from '../i18n';
 
 const heartPopSource = require('../../assets/lottie/heart-pop.json');
 
@@ -17,6 +18,7 @@ const FEED_COST_BRAINS = 2;
 
 export function CompanionModal({ visible, onClose }: CompanionModalProps) {
   const brains = useGameStore((s) => s.brains);
+  const t = useT();
   const companionXp = useGameStore((s) => s.companionXp);
   const unlockedAccessories = useGameStore((s) => s.unlockedAccessories);
   const equippedAccessory = useGameStore((s) => s.equippedAccessory);
@@ -49,8 +51,8 @@ export function CompanionModal({ visible, onClose }: CompanionModalProps) {
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <View style={styles.header}>
-            <Text style={styles.title}>Compagnon</Text>
-            <PressableScale onPress={onClose}>
+            <Text style={styles.title}>{t('companion.title')}</Text>
+            <PressableScale onPress={onClose} hitSlop={20}>
               <Text style={styles.close}>✕</Text>
             </PressableScale>
           </View>
@@ -63,7 +65,7 @@ export function CompanionModal({ visible, onClose }: CompanionModalProps) {
               <Text style={styles.companionEmoji}>{tier.emoji}</Text>
               {equippedEmoji && <Text style={styles.accessoryOverlay}>{equippedEmoji}</Text>}
             </Animated.View>
-            <Text style={styles.companionName}>{tier.name}</Text>
+            <Text style={styles.companionName}>{t(`tier.${tier.level}`)}</Text>
             <View style={styles.progressTrack}>
               <View style={[styles.progressFill, { width: `${Math.round(progress * 100)}%` }]} />
             </View>
@@ -73,11 +75,11 @@ export function CompanionModal({ visible, onClose }: CompanionModalProps) {
               onPress={handleFeed}
               disabled={brains < FEED_COST_BRAINS}
             >
-              <Text style={styles.feedButtonText}>Nourrir · {FEED_COST_BRAINS} 🧠</Text>
+              <Text style={styles.feedButtonText}>{t('companion.feed', { n: FEED_COST_BRAINS })}</Text>
             </PressableScale>
           </View>
 
-          <Text style={styles.sectionTitle}>Accessoires</Text>
+          <Text style={styles.sectionTitle}>{t('companion.accessories')}</Text>
           <ScrollView contentContainerStyle={styles.grid}>
             {ACCESSORIES.map((item) => {
               const unlocked = unlockedAccessories.includes(item.id);
@@ -98,7 +100,7 @@ export function CompanionModal({ visible, onClose }: CompanionModalProps) {
                     {item.emoji}
                   </Text>
                   <Text style={styles.gridLabel}>
-                    {unlocked ? item.name : `${item.cost} 🧠`}
+                    {unlocked ? t(`acc.${item.id}`) : `${item.cost} 🧠`}
                   </Text>
                   {equipped && (
                     <View style={styles.checkBadge}>
@@ -143,6 +145,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   close: {
+    padding: 8,
     fontSize: 20,
     color: colors.ink,
   },

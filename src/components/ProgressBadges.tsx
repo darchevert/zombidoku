@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
+import { useT } from '../i18n';
 
 interface ProgressBadgesProps {
   zombiesPlaced: number;
@@ -13,6 +14,7 @@ interface ProgressBadgesProps {
 }
 
 export function ProgressBadges({ zombiesPlaced, zombiesTotal, lives, maxLives, zen }: ProgressBadgesProps) {
+  const t = useT();
   return (
     <View style={styles.row}>
       <View style={styles.pill}>
@@ -24,7 +26,7 @@ export function ProgressBadges({ zombiesPlaced, zombiesTotal, lives, maxLives, z
       {zen ? (
         <View style={styles.pill}>
           <Text style={styles.emoji}>🧘</Text>
-          <Text style={styles.count}>Zen</Text>
+          <Text style={styles.count}>{t('common.zen')}</Text>
         </View>
       ) : (
         <View style={styles.pill}>

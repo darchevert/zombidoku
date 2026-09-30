@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { PressableScale } from './PressableScale';
+import { useT } from '../i18n';
 
 interface TopBarProps {
   /** e.g. "Niveau" / "5" for a regular level, "Défi" / "du jour" for the
@@ -15,12 +16,13 @@ interface TopBarProps {
 }
 
 export function TopBar({ titleLabel, titleValue, score, onBack, onSettings }: TopBarProps) {
+  const t = useT();
   return (
     <View style={styles.row}>
       <RoundButton icon="←" onPress={onBack} />
       <View style={styles.center}>
         <Stat label={titleLabel} value={titleValue} />
-        <Stat label="Score" value={String(score)} />
+        <Stat label={t('common.score')} value={String(score)} />
       </View>
       <RoundButton icon="⚙" onPress={onSettings} />
     </View>

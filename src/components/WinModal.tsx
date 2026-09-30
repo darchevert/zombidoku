@@ -3,6 +3,7 @@ import { Animated, Modal, StyleSheet, Text, View } from 'react-native';
 import LottieView from 'lottie-react-native';
 import { colors } from '../theme/colors';
 import { PressableScale } from './PressableScale';
+import { useT } from '../i18n';
 
 const confettiSource = require('../../assets/lottie/confetti.json');
 
@@ -40,6 +41,7 @@ export function WinModal({
   elapsedSeconds,
   isNewRecord,
 }: WinModalProps) {
+  const t = useT();
   const confettiRef = useRef<LottieView>(null);
   const cardScale = useRef(new Animated.Value(0.7)).current;
   const cardOpacity = useRef(new Animated.Value(0)).current;
@@ -71,13 +73,13 @@ export function WinModal({
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.emoji}>🧟🎉</Text>
           <View style={styles.rewardsRow}>
-            <Text style={styles.reward}>+{scoreEarned} points</Text>
+            <Text style={styles.reward}>{t('win.points', { n: scoreEarned })}</Text>
             <Text style={styles.reward}>+{brainsEarned} 🧠</Text>
           </View>
           {elapsedSeconds !== undefined && (
             <Text style={styles.timeText}>
-              Temps : {formatTime(elapsedSeconds)}
-              {isNewRecord ? ' · 🏆 Nouveau record !' : ''}
+              {t('win.time', { t: formatTime(elapsedSeconds) })}
+              {isNewRecord ? t('win.record') : ''}
             </Text>
           )}
           <PressableScale style={styles.primaryButton} onPress={onPrimary}>

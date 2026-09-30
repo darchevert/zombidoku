@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
+import { useT } from '../i18n';
 
 type MiniCell = 'x' | 'zombie' | 'blank';
 
@@ -46,11 +47,12 @@ const RULE_NO_TOUCH: MiniCell[][] = [
 ];
 
 export function RuleCards() {
+  const t = useT();
   return (
     <View style={styles.row}>
-      <RuleCard grid={RULE_ONE_PER_COLOR} text={'1 zombie par\ncimetière'} />
-      <RuleCard grid={RULE_ONE_PER_LINE} text={'1 zombie par\nligne et colonne'} />
-      <RuleCard grid={RULE_NO_TOUCH} text={'Ils ne se touchent pas,\nsinon ils se multiplient !'} />
+      <RuleCard grid={RULE_ONE_PER_COLOR} text={t('rules.color')} />
+      <RuleCard grid={RULE_ONE_PER_LINE} text={t('rules.line')} />
+      <RuleCard grid={RULE_NO_TOUCH} text={t('rules.touch')} />
     </View>
   );
 }

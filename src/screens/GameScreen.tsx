@@ -21,6 +21,7 @@ import { showRewardedAd } from '../utils/ads';
 import { useGameStore } from '../state/store';
 import { colors } from '../theme/colors';
 import { MAX_CONTENT_WIDTH } from '../theme/layout';
+import { useT } from '../i18n';
 
 // Rewarded ads need a native SDK (see utils/ads.ts) that can't run in a
 // browser tab — hidden on web rather than offering a button that could
@@ -36,7 +37,7 @@ const CRITTER_POP_MS = 450;
 const CRITTER_GAP_MS = 150;
 const MAX_LIVES = 3;
 const DOUBLE_TAP_MS = 300;
-const CELEBRATION_WORDS = ['Excellent !', 'Génial !', 'Incroyable !', 'Bravo !', 'Parfait !', 'Superbe !'];
+const CELEBRATION_COUNT = 6;
 
 function emptyGrid(size: number): CellState[][] {
   return Array.from({ length: size }, () => new Array<CellState>(size).fill('empty'));
@@ -97,6 +98,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   );
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [grid, setGrid] = useState<CellState[][]>([]);
+  const t = useT();
   const [loading, setLoading] = useState(true);
   const [scrollLocked, setScrollLocked] = useState(false);
   // The hint overlay: `hintActive` drives the dimmed-screen effect,
@@ -137,7 +139,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
 
   function triggerCelebration() {
     celebrationIdRef.current += 1;
-    const word = CELEBRATION_WORDS[Math.floor(Math.random() * CELEBRATION_WORDS.length)];
+    const word = t(`celebration.${1 + Math.floor(Math.random() * CELEBRATION_COUNT)}`);
     setCelebration({ id: celebrationIdRef.current, word });
   }
 
@@ -371,7 +373,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   function handleHint() {
     if (!puzzle || won || lost || hintActive) return;
     if (!useHintCharge() && !buyHint()) {
-      Alert.alert('Pas assez de cerveaux', 'Termine des niveaux pour en gagner plus 🧠');
+      Alert.alert(t('game.noBrainsTitle'), t('game.noBrainsBody'));
       return;
     }
     setHintsUsed((n) => n + 1);
@@ -424,7 +426,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     const row = firstUnsolvedRow();
     if (row === null) return;
     if (!useAutoCatCharge() && !buyAutoCat()) {
-      Alert.alert('Pas assez de cerveaux', 'Termine des niveaux pour en gagner plus 🧠');
+      Alert.alert(t('game.noBrainsTitle'), t('game.noBrainsBody'));
       return;
     }
     setAutoCatsUsed((n) => n + 1);
@@ -453,7 +455,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     }
     if (candidates.length === 0) return;
     if (!useMouseCharge() && !buyMouse()) {
-      Alert.alert('Pas assez de cerveaux', 'Termine des niveaux pour en gagner plus 🧠');
+      Alert.alert(t('game.noBrainsTitle'), t('game.noBrainsBody'));
       return;
     }
     for (let i = candidates.length - 1; i > 0; i--) {
@@ -524,11 +526,11 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
       <View style={styles.screen}>
         <ScrollView contentContainerStyle={styles.content}>
           <View style={styles.inner}>
-            <TopBar titleLabel="Alerte" titleValue="zombie" score={score} onBack={onBack} onSettings={onSettings} />
+            <TopBar titleLabel={t('game.alert')} titleValue={t('game.zombie')} score={score} onBack={onBack} onSettings={onSettings} />
             <View style={styles.doneCard}>
               <Text style={styles.doneEmoji}>🧟✅</Text>
-              <Text style={styles.doneTitle}>Alerte zombie déjà réussie !</Text>
-              <Text style={styles.doneSubtitle}>Reviens demain pour une nouvelle alerte.</Text>
+              <Text style={styles.doneTitle}>{t('game.dailyDoneTitle')}</Text>
+              <Text style={styles.doneSubtitle}>{t('game.dailyDoneBody')}</Text>
             </View>
           </View>
         </ScrollView>
@@ -543,8 +545,8 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
           <View style={styles.inner}>
             <View style={[styles.chromeGroup, hintActive && styles.dimmedChrome]}>
               <TopBar
-                titleLabel={daily ? 'Alerte' : 'Niveau'}
-                titleValue={daily ? 'zombie' : String(activeLevel)}
+                titleLabel={daily ? t('game.alert') : t('common.level')}
+                titleValue={daily ? t('game.zombie') : String(activeLevel)}
                 score={score}
                 onBack={onBack}
                 onSettings={onSettings}
@@ -594,10 +596,10 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
             {hintActive && (
               <View style={styles.hintActionsRow}>
                 <PressableScale style={styles.hintApplyButton} onPress={applyHint}>
-                  <Text style={styles.hintApplyButtonText}>Appliquer</Text>
+                  <Text style={styles.hintApplyButtonText}>{t('common.apply')}</Text>
                 </PressableScale>
                 <PressableScale style={styles.hintCloseButton} onPress={closeHint}>
-                  <Text style={styles.hintCloseButtonText}>Fermer</Text>
+                  <Text style={styles.hintCloseButtonText}>{t('common.close')}</Text>
                 </PressableScale>
               </View>
             )}
@@ -614,10 +616,10 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
 
       <WinModal
         visible={won}
-        title={daily ? 'Alerte zombie terminée !' : `Niveau ${activeLevel} terminé !`}
+        title={daily ? t('win.dailyTitle') : t('win.title', { n: activeLevel })}
         scoreEarned={lastReward.score}
         brainsEarned={lastReward.brains}
-        primaryLabel={daily ? 'Accueil' : 'Niveau suivant'}
+        primaryLabel={daily ? t('common.home') : t('win.next')}
         onPrimary={
           daily
             ? onBack
@@ -626,7 +628,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
                 setActiveLevel((l) => l + 1);
               }
         }
-        secondaryLabel={daily ? undefined : 'Accueil'}
+        secondaryLabel={daily ? undefined : t('common.home')}
         onSecondary={daily ? undefined : onBack}
         elapsedSeconds={timerModeEnabled ? lastElapsedSec : undefined}
         isNewRecord={isNewRecord}
@@ -634,7 +636,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
 
       <LoseModal
         visible={lost}
-        title={daily ? 'Alerte zombie ratée' : `Niveau ${activeLevel} raté`}
+        title={daily ? t('lose.dailyTitle') : t('lose.title', { n: activeLevel })}
         onRetry={() => {
           setLost(false);
           setAttempt((a) => a + 1);

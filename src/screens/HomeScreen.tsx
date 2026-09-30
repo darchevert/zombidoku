@@ -11,6 +11,7 @@ import { SettingsModal } from '../components/SettingsModal';
 import { CompanionModal } from '../components/CompanionModal';
 import { PressableScale } from '../components/PressableScale';
 import { MAX_CONTENT_WIDTH } from '../theme/layout';
+import { useT } from '../i18n';
 
 interface HomeScreenProps {
   onPlay: () => void;
@@ -18,6 +19,7 @@ interface HomeScreenProps {
 }
 
 export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
+  const t = useT();
   const level = useGameStore((s) => s.level);
   const avatar = useGameStore((s) => s.avatar);
   const streak = useGameStore((s) => s.streak);
@@ -43,7 +45,7 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <View style={styles.topRow}>
           <PressableScale style={styles.avatarButton} onPress={() => setShowProfile(true)}>
             <Text style={styles.avatarEmoji}>{AVATAR_EMOJI[avatar]}</Text>
@@ -59,21 +61,21 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
             onPress={onPlayDaily}
             disabled={!dailyUnlocked}
           >
-            <Text style={styles.cardTitle}>Alerte{'\n'}zombie</Text>
+            <Text style={styles.cardTitle}>{t('home.alertTitle')}</Text>
             {dailyUnlocked ? (
               <Text style={styles.cardIcon}>{dailyDoneToday ? '✅' : '🎯'}</Text>
             ) : (
               <>
                 <Text style={styles.lockIcon}>🔒</Text>
                 <Text style={styles.cardSubtitle}>
-                  Débloqué au Niv. {DAILY_CHALLENGE_UNLOCK_LEVEL}
+                  {t('home.unlockAt', { n: DAILY_CHALLENGE_UNLOCK_LEVEL })}
                 </Text>
               </>
             )}
           </PressableScale>
 
           <PressableScale style={[styles.card, styles.streakCard]} onPress={() => setShowStreak(true)}>
-            <Text style={[styles.cardTitle, styles.streakTitle]}>Nuits</Text>
+            <Text style={[styles.cardTitle, styles.streakTitle]}>{t('home.nights')}</Text>
             <Text style={styles.cardIcon}>🌙</Text>
             <View style={styles.streakPill}>
               <Text style={styles.streakValue}>{streak}</Text>
@@ -81,8 +83,8 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
             {nextBonusReward && (
               <Text style={styles.streakBonusHint}>
                 {nightsUntilBonus === 0
-                  ? `${nextBonusReward.emoji} ce soir`
-                  : `${nextBonusReward.emoji} dans ${nightsUntilBonus}`}
+                  ? `${nextBonusReward.emoji} ${t('home.tonight')}`
+                  : `${nextBonusReward.emoji} ${t('home.inDays', { n: nightsUntilBonus })}`}
               </Text>
             )}
           </PressableScale>
@@ -94,7 +96,7 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
             {equippedEmoji && <Text style={styles.companionAccessory}>{equippedEmoji}</Text>}
           </View>
           <View style={styles.companionInfo}>
-            <Text style={styles.companionBannerName}>{tier.name}</Text>
+            <Text style={styles.companionBannerName}>{t(`tier.${tier.level}`)}</Text>
             <View style={styles.companionProgressTrack}>
               <View
                 style={[styles.companionProgressFill, { width: `${Math.round(progress * 100)}%` }]}
@@ -114,7 +116,7 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
         </View>
 
         <PressableScale style={styles.playButton} onPress={onPlay}>
-          <Text style={styles.playButtonText}>Niveau {level}</Text>
+          <Text style={styles.playButtonText}>{t('home.levelButton', { n: level })}</Text>
         </PressableScale>
       </ScrollView>
 
@@ -131,6 +133,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     alignItems: 'center',
+  },
+  scroll: {
+    // The screen centres its children, so without an explicit width the
+    // ScrollView shrink-wraps its content and the 100%-wide rows overflow.
+    width: '100%',
   },
   content: {
     flexGrow: 1,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import {
@@ -10,6 +10,7 @@ import {
   useGameStore,
 } from '../state/store';
 import { PressableScale } from './PressableScale';
+import { useT } from '../i18n';
 
 const FRAME_COLORS: Record<FrameId, string> = {
   none: 'transparent',
@@ -25,6 +26,7 @@ interface ProfileModalProps {
 }
 
 export function ProfileModal({ visible, onClose }: ProfileModalProps) {
+  const t = useT();
   const playerId = useGameStore((s) => s.playerId);
   const avatar = useGameStore((s) => s.avatar);
   const frame = useGameStore((s) => s.frame);
@@ -35,13 +37,23 @@ export function ProfileModal({ visible, onClose }: ProfileModalProps) {
   const [pendingAvatar, setPendingAvatar] = useState<AvatarId>(avatar);
   const [pendingFrame, setPendingFrame] = useState<FrameId>(frame);
 
+  // Closing with ✕ discards the unconfirmed picks: start from the saved
+  // profile every time the modal opens.
+  useEffect(() => {
+    if (visible) {
+      setPendingAvatar(avatar);
+      setPendingFrame(frame);
+      setTab('avatar');
+    }
+  }, [visible]);
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <View style={styles.header}>
-            <Text style={styles.title}>Profil</Text>
-            <PressableScale onPress={onClose}>
+            <Text style={styles.title}>{t('profile.title')}</Text>
+            <PressableScale onPress={onClose} hitSlop={20}>
               <Text style={styles.close}>✕</Text>
             </PressableScale>
           </View>
@@ -66,7 +78,7 @@ export function ProfileModal({ visible, onClose }: ProfileModalProps) {
               onPress={() => setTab('avatar')}
             >
               <Text style={[styles.tabText, tab === 'avatar' && styles.tabTextActive]}>
-                Avatar
+                {t('profile.avatar')}
               </Text>
             </PressableScale>
             <PressableScale
@@ -74,7 +86,7 @@ export function ProfileModal({ visible, onClose }: ProfileModalProps) {
               onPress={() => setTab('frame')}
             >
               <Text style={[styles.tabText, tab === 'frame' && styles.tabTextActive]}>
-                Cadre
+                {t('profile.frame')}
               </Text>
             </PressableScale>
           </View>
@@ -119,7 +131,7 @@ export function ProfileModal({ visible, onClose }: ProfileModalProps) {
               onClose();
             }}
           >
-            <Text style={styles.confirmText}>Confirmer</Text>
+            <Text style={styles.confirmText}>{t('common.confirm')}</Text>
           </PressableScale>
         </View>
       </View>
@@ -155,6 +167,7 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   close: {
+    padding: 8,
     fontSize: 20,
     color: colors.ink,
   },

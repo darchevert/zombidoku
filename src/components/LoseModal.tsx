@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, StyleSheet, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { PressableScale } from './PressableScale';
+import { useT } from '../i18n';
 
 interface LoseModalProps {
   visible: boolean;
@@ -11,18 +12,19 @@ interface LoseModalProps {
 }
 
 export function LoseModal({ visible, title, onRetry, onHome }: LoseModalProps) {
+  const t = useT();
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.emoji}>🧟💀</Text>
-          <Text style={styles.subtitle}>Plus de vies pour ce niveau</Text>
+          <Text style={styles.subtitle}>{t('lose.subtitle')}</Text>
           <PressableScale style={styles.primaryButton} onPress={onRetry}>
-            <Text style={styles.primaryButtonText}>Réessayer</Text>
+            <Text style={styles.primaryButtonText}>{t('common.retry')}</Text>
           </PressableScale>
           <PressableScale style={styles.secondaryButton} onPress={onHome}>
-            <Text style={styles.secondaryButtonText}>Accueil</Text>
+            <Text style={styles.secondaryButtonText}>{t('common.home')}</Text>
           </PressableScale>
         </View>
       </View>

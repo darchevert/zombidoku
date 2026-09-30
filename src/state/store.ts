@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { todayKey } from '../utils/date';
 import { milestoneForDay, type StreakReward } from '../utils/streakRewards';
+import type { Lang } from '../i18n/translations';
 
 export const AVATARS = [
   'zombie',
@@ -88,6 +89,9 @@ interface GameState {
   claimStreak: () => StreakReward | null;
 
   // Settings
+  /** Explicit UI language, or null to follow the device language. */
+  language: Lang | null;
+  setLanguage: (lang: Lang | null) => void;
   soundEnabled: boolean;
   musicEnabled: boolean;
   hapticsEnabled: boolean;
@@ -226,6 +230,8 @@ export const useGameStore = create<GameState>()(
         return milestone;
       },
 
+      language: null,
+      setLanguage: (language) => set({ language }),
       soundEnabled: true,
       musicEnabled: true,
       hapticsEnabled: true,
