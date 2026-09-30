@@ -635,7 +635,6 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
               style={styles.boardArea}
               onLayout={(e) => setBoardRoom({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
             >
-              <Celebration trigger={celebration} />
               {loading || !puzzle ? (
                 <View style={styles.loading}>
                   <ActivityIndicator size="large" color={colors.accent} />
@@ -657,6 +656,8 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
                   maxSize={boardRoom ? Math.max(160, Math.min(boardRoom.w, boardRoom.h)) : undefined}
                 />
               )}
+              {/* After the board so it is drawn on top of it. */}
+              <Celebration trigger={celebration} />
             </View>
 
             {hintActive && (

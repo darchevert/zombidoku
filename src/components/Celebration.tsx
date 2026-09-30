@@ -13,11 +13,12 @@ interface CelebrationProps {
   trigger: CelebrationTrigger | null;
 }
 
-const HOLD_MS = 500;
+const HOLD_MS = 950;
 const FADE_MS = 220;
 
-/** A brief "👏 Excellent ! 👏" pop that floats above the board when a
- * zombie is correctly guessed — pure visual reward, doesn't block input. */
+/** A gold pill ("👏 Excellent ! 👏") that pops over the top of the board when
+ * a zombie is correctly guessed. Solid background and border so it reads on
+ * any cell color, and drawn above the board; it never blocks input. */
 export function Celebration({ trigger }: CelebrationProps) {
   const anim = useRef(new Animated.Value(0)).current;
   const [word, setWord] = useState<string | null>(null);
@@ -46,9 +47,11 @@ export function Celebration({ trigger }: CelebrationProps) {
       pointerEvents="none"
       style={[styles.wrap, { opacity: anim, transform: [{ scale }, { translateY }] }]}
     >
-      <Text style={styles.clap}>👏</Text>
-      <Text style={styles.word}>{word}</Text>
-      <Text style={styles.clap}>👏</Text>
+      <Animated.View style={styles.pill}>
+        <Text style={styles.clap}>👏</Text>
+        <Text style={styles.word}>{word}</Text>
+        <Text style={styles.clap}>👏</Text>
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -56,24 +59,35 @@ export function Celebration({ trigger }: CelebrationProps) {
 const styles = StyleSheet.create({
   wrap: {
     position: 'absolute',
-    top: -34,
+    top: 8,
     left: 0,
     right: 0,
+    alignItems: 'center',
+    zIndex: 50,
+    elevation: 50,
+  },
+  pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 8,
-    zIndex: 10,
+    backgroundColor: colors.accentSecondary,
+    borderRadius: 999,
+    borderWidth: 3,
+    borderColor: '#B98B12',
+    paddingVertical: 6,
+    paddingHorizontal: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
   },
   clap: {
-    fontSize: 24,
+    fontSize: 22,
   },
   word: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.accent,
-    textShadowColor: 'rgba(36, 27, 51, 0.9)',
-    textShadowRadius: 4,
-    textShadowOffset: { width: 0, height: 1 },
+    fontSize: 22,
+    fontWeight: '900',
+    color: colors.ink,
+    letterSpacing: 0.3,
   },
 });
