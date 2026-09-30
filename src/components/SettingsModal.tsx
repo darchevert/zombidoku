@@ -13,11 +13,7 @@ interface SettingsModalProps {
 }
 
 export function SettingsModal({ visible, onClose }: SettingsModalProps) {
-  const soundEnabled = useGameStore((s) => s.soundEnabled);
-  const musicEnabled = useGameStore((s) => s.musicEnabled);
   const hapticsEnabled = useGameStore((s) => s.hapticsEnabled);
-  const toggleSound = useGameStore((s) => s.toggleSound);
-  const toggleMusic = useGameStore((s) => s.toggleMusic);
   const toggleHaptics = useGameStore((s) => s.toggleHaptics);
   const zenModeEnabled = useGameStore((s) => s.zenModeEnabled);
   const toggleZenMode = useGameStore((s) => s.toggleZenMode);
@@ -48,9 +44,7 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
           </View>
 
           <ScrollView showsVerticalScrollIndicator={false}>
-          <Row label={t('settings.sounds')} value={soundEnabled} onToggle={toggleSound} />
           <VolumeBar label={t('settings.sfxVolume')} value={sfxVolume} onChange={setSfxVolume} />
-          <Row label={t('settings.music')} value={musicEnabled} onToggle={toggleMusic} />
           <VolumeBar label={t('settings.musicVolume')} value={musicVolume} onChange={setMusicVolume} />
           <Row label={t('settings.haptics')} value={hapticsEnabled} onToggle={toggleHaptics} />
           <Row label={t('settings.zen')} value={zenModeEnabled} onToggle={toggleZenMode} />
@@ -84,7 +78,8 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
 }
 
 /** Ten tappable segments: tap the n-th to set the volume to n/10, tap the
- * speaker to mute. Deliberately not a drag slider, so it needs no native
+ * speaker to mute (and again to come back at half volume). Volume 0 is
+ * the only "off" state. Deliberately not a drag slider, so it needs no native
  * dependency and can't be mis-set by a stray swipe inside the scrolling
  * settings card. */
 function VolumeBar({
@@ -101,7 +96,7 @@ function VolumeBar({
     <View style={styles.volumeBox}>
       <Text style={styles.volumeLabel}>{label}</Text>
       <View style={styles.volumeRow}>
-        <PressableScale hitSlop={10} onPress={() => onChange(0)}>
+        <PressableScale hitSlop={10} onPress={() => onChange(level === 0 ? 0.5 : 0)}>
           <Text style={styles.speaker}>{level === 0 ? '🔇' : '🔈'}</Text>
         </PressableScale>
         {Array.from({ length: 10 }).map((_, i) => (

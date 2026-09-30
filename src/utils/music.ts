@@ -109,8 +109,8 @@ function ensureTimer() {
  * crossfade. Calling it again for the same key while playing is a no-op,
  * so nothing ever swaps the track mid-level. No-op when music is off. */
 export function playMusicForLevel(key: string | number): void {
-  const { musicEnabled, musicVolume } = useGameStore.getState();
-  if (!musicEnabled || musicVolume <= 0) return;
+  const { musicVolume } = useGameStore.getState();
+  if (musicVolume <= 0) return;
   if (current && chosen?.key === key) return;
 
   stopMusic();

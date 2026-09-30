@@ -69,7 +69,8 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   const buyAutoCat = useGameStore((s) => s.buyAutoCat);
   const buyMouse = useGameStore((s) => s.buyMouse);
   const hapticsEnabled = useGameStore((s) => s.hapticsEnabled);
-  const soundEnabled = useGameStore((s) => s.soundEnabled);
+  // A volume of 0 is "off": the settings have no separate on/off switches.
+  const soundEnabled = useGameStore((s) => s.sfxVolume > 0);
   const zenModeEnabled = useGameStore((s) => s.zenModeEnabled);
   const timerModeEnabled = useGameStore((s) => s.timerModeEnabled);
   const recordBestTime = useGameStore((s) => s.recordBestTime);
@@ -101,7 +102,6 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [grid, setGrid] = useState<CellState[][]>([]);
   const t = useT();
-  const musicEnabled = useGameStore((s) => s.musicEnabled);
   const musicOn = useGameStore((s) => s.musicVolume > 0);
   const [loading, setLoading] = useState(true);
 
@@ -110,7 +110,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   useEffect(() => {
     playMusicForLevel(activeLevel);
     return stopMusic;
-  }, [activeLevel, musicEnabled, musicOn]);
+  }, [activeLevel, musicOn]);
   useEffect(() => resetMusicChoice, []);
   // Freezing the page scroll while a finger paints the board. Done straight
   // on the native view (no state) so it never re-renders the screen.
