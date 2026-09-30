@@ -25,7 +25,7 @@ export function RuleCard({ grid, text }: RuleCardProps) {
           </View>
         ))}
       </View>
-      <Text style={styles.text}>{text}</Text>
+      <Text style={styles.text}>{text.split('\n').join(' ')}</Text>
     </View>
   );
 }
@@ -65,16 +65,19 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    flexDirection: 'row',
+    // Drawing on top, explanation underneath: three side-by-side cards are
+    // too narrow to fit the text beside the drawing on a phone.
+    flexDirection: 'column',
     alignItems: 'center',
     backgroundColor: colors.surfaceMuted,
     borderRadius: 14,
-    padding: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
     gap: 8,
   },
   mini: {
-    width: 36,
-    height: 36,
+    width: 48,
+    height: 48,
   },
   miniRow: {
     flexDirection: 'row',
@@ -89,17 +92,17 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   miniZombie: {
-    fontSize: 8,
+    fontSize: 11,
   },
   miniX: {
-    fontSize: 8,
+    fontSize: 11,
     color: colors.inkSoft,
     fontWeight: '700',
   },
   text: {
-    flex: 1,
-    fontSize: 11,
+    fontSize: 11.5,
     color: colors.ink,
-    lineHeight: 14,
+    lineHeight: 15,
+    textAlign: 'center',
   },
 });
