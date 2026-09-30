@@ -1,4 +1,5 @@
 import { createAudioPlayer, type AudioPlayer } from 'expo-audio';
+import { useGameStore } from '../state/store';
 
 const sources = {
   correct: require('../../assets/sounds/correct.wav'),
@@ -31,6 +32,7 @@ function getPlayer(key: SoundKey): AudioPlayer {
 export async function playSound(key: SoundKey): Promise<void> {
   try {
     const player = getPlayer(key);
+    player.volume = useGameStore.getState().sfxVolume;
     await player.seekTo(0);
     player.play();
   } catch {

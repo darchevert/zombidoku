@@ -94,6 +94,11 @@ interface GameState {
   setLanguage: (lang: Lang | null) => void;
   soundEnabled: boolean;
   musicEnabled: boolean;
+  /** 0..1 — sound effects and background music levels. */
+  sfxVolume: number;
+  musicVolume: number;
+  setSfxVolume: (v: number) => void;
+  setMusicVolume: (v: number) => void;
   hapticsEnabled: boolean;
   toggleSound: () => void;
   toggleMusic: () => void;
@@ -234,6 +239,10 @@ export const useGameStore = create<GameState>()(
       setLanguage: (language) => set({ language }),
       soundEnabled: true,
       musicEnabled: true,
+      sfxVolume: 0.7,
+      musicVolume: 0.4,
+      setSfxVolume: (sfxVolume) => set({ sfxVolume }),
+      setMusicVolume: (musicVolume) => set({ musicVolume }),
       hapticsEnabled: true,
       toggleSound: () => set((s) => ({ soundEnabled: !s.soundEnabled })),
       toggleMusic: () => set((s) => ({ musicEnabled: !s.musicEnabled })),

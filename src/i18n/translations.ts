@@ -67,6 +67,9 @@ const fr: Dict = {
   'settings.zen': 'Mode Zen (sans vies)',
   'settings.timer': 'Mode chrono',
   'settings.privacy': 'Confidentialité et publicités',
+  'settings.sfxVolume': 'Volume des bruitages',
+  'settings.musicVolume': 'Volume de la musique',
+  'settings.credits': 'Crédits musique',
   'settings.language': 'Langue',
 
   'profile.title': 'Profil',
@@ -168,6 +171,9 @@ const en: Dict = {
   'settings.zen': 'Zen mode (no lives)',
   'settings.timer': 'Timer mode',
   'settings.privacy': 'Privacy and ads',
+  'settings.sfxVolume': 'Sound effects volume',
+  'settings.musicVolume': 'Music volume',
+  'settings.credits': 'Music credits',
   'settings.language': 'Language',
 
   'profile.title': 'Profile',
@@ -269,6 +275,9 @@ const es: Dict = {
   'settings.zen': 'Modo Zen (sin vidas)',
   'settings.timer': 'Modo cronómetro',
   'settings.privacy': 'Privacidad y anuncios',
+  'settings.sfxVolume': 'Volumen de los sonidos',
+  'settings.musicVolume': 'Volumen de la música',
+  'settings.credits': 'Créditos de la música',
   'settings.language': 'Idioma',
 
   'profile.title': 'Perfil',
@@ -370,6 +379,9 @@ const de: Dict = {
   'settings.zen': 'Zen-Modus (ohne Leben)',
   'settings.timer': 'Zeitmodus',
   'settings.privacy': 'Datenschutz und Werbung',
+  'settings.sfxVolume': 'Lautstärke der Geräusche',
+  'settings.musicVolume': 'Lautstärke der Musik',
+  'settings.credits': 'Musik-Credits',
   'settings.language': 'Sprache',
 
   'profile.title': 'Profil',
@@ -471,6 +483,9 @@ const it: Dict = {
   'settings.zen': 'Modalità Zen (senza vite)',
   'settings.timer': 'Modalità cronometro',
   'settings.privacy': 'Privacy e pubblicità',
+  'settings.sfxVolume': 'Volume dei suoni',
+  'settings.musicVolume': 'Volume della musica',
+  'settings.credits': 'Crediti musica',
   'settings.language': 'Lingua',
 
   'profile.title': 'Profilo',
@@ -572,6 +587,9 @@ const pt: Dict = {
   'settings.zen': 'Modo Zen (sem vidas)',
   'settings.timer': 'Modo cronômetro',
   'settings.privacy': 'Privacidade e anúncios',
+  'settings.sfxVolume': 'Volume dos sons',
+  'settings.musicVolume': 'Volume da música',
+  'settings.credits': 'Créditos da música',
   'settings.language': 'Idioma',
 
   'profile.title': 'Perfil',

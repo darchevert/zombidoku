@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, StyleSheet, Switch, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { colors } from '../theme/colors';
 import { useGameStore } from '../state/store';
 import { privacyOptionsRequired, showPrivacyOptions } from '../utils/ads';
@@ -22,6 +22,10 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
   const toggleZenMode = useGameStore((s) => s.toggleZenMode);
   const timerModeEnabled = useGameStore((s) => s.timerModeEnabled);
   const toggleTimerMode = useGameStore((s) => s.toggleTimerMode);
+  const sfxVolume = useGameStore((s) => s.sfxVolume);
+  const musicVolume = useGameStore((s) => s.musicVolume);
+  const setSfxVolume = useGameStore((s) => s.setSfxVolume);
+  const setMusicVolume = useGameStore((s) => s.setMusicVolume);
   const t = useT();
   const language = useGameStore((s) => s.language);
   const setLanguage = useGameStore((s) => s.setLanguage);
@@ -42,8 +46,11 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
             </PressableScale>
           </View>
 
+          <ScrollView showsVerticalScrollIndicator={false}>
           <Row label={t('settings.sounds')} value={soundEnabled} onToggle={toggleSound} />
+          <VolumeBar label={t('settings.sfxVolume')} value={sfxVolume} onChange={setSfxVolume} />
           <Row label={t('settings.music')} value={musicEnabled} onToggle={toggleMusic} />
+          <VolumeBar label={t('settings.musicVolume')} value={musicVolume} onChange={setMusicVolume} />
           <Row label={t('settings.haptics')} value={hapticsEnabled} onToggle={toggleHaptics} />
           <Row label={t('settings.zen')} value={zenModeEnabled} onToggle={toggleZenMode} />
           <Row label={t('settings.timer')} value={timerModeEnabled} onToggle={toggleTimerMode} />
@@ -64,9 +71,49 @@ export function SettingsModal({ visible, onClose }: SettingsModalProps) {
               <Text style={styles.rowLabel}>{t('settings.privacy')}</Text>
             </PressableScale>
           )}
+          <Text style={styles.sectionLabel}>{t('settings.credits')}</Text>
+          <Text style={styles.credits}>
+            Alexandr Zhelanov (Doll House, WTF! Ghost!) · Alex McCulloch (Caper)
+          </Text>
+          </ScrollView>
         </View>
       </View>
     </Modal>
+  );
+}
+
+/** Ten tappable segments: tap the n-th to set the volume to n/10, tap the
+ * speaker to mute. Deliberately not a drag slider, so it needs no native
+ * dependency and can't be mis-set by a stray swipe inside the scrolling
+ * settings card. */
+function VolumeBar({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  const level = Math.round(value * 10);
+  return (
+    <View style={styles.volumeBox}>
+      <Text style={styles.volumeLabel}>{label}</Text>
+      <View style={styles.volumeRow}>
+        <PressableScale hitSlop={10} onPress={() => onChange(0)}>
+          <Text style={styles.speaker}>{level === 0 ? '🔇' : '🔈'}</Text>
+        </PressableScale>
+        {Array.from({ length: 10 }).map((_, i) => (
+          <PressableScale
+            key={i}
+            hitSlop={{ top: 12, bottom: 12 }}
+            style={[styles.segment, i < level && styles.segmentOn]}
+            onPress={() => onChange((i + 1) / 10)}
+          />
+        ))}
+        <Text style={styles.speaker}>🔊</Text>
+      </View>
+    </View>
   );
 }
 
@@ -102,6 +149,7 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 380,
+    maxHeight: '88%',
     backgroundColor: colors.surface,
     borderRadius: 24,
     padding: 20,
@@ -146,6 +194,43 @@ const styles = StyleSheet.create({
   },
   langTextActive: {
     color: colors.background,
+  },
+  volumeBox: {
+    paddingHorizontal: 16,
+    marginTop: -4,
+    marginBottom: 12,
+  },
+  volumeLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.inkSoft,
+    marginBottom: 6,
+  },
+  volumeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  speaker: {
+    fontSize: 16,
+    marginHorizontal: 4,
+  },
+  segment: {
+    flex: 1,
+    height: 18,
+    borderRadius: 4,
+    backgroundColor: colors.surfaceMuted,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.12)',
+  },
+  segmentOn: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+  },
+  credits: {
+    fontSize: 12,
+    color: colors.inkSoft,
+    marginBottom: 8,
   },
   close: {
     padding: 8,
