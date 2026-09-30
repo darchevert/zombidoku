@@ -22,7 +22,7 @@ import { useGameStore } from '../state/store';
 import { colors } from '../theme/colors';
 import { MAX_CONTENT_WIDTH } from '../theme/layout';
 import { useT } from '../i18n';
-import { playRandomMusic, stopMusic } from '../utils/music';
+import { playMusicForLevel, resetMusicChoice, stopMusic } from '../utils/music';
 
 // Rewarded ads need a native SDK (see utils/ads.ts) that can't run in a
 // browser tab — hidden on web rather than offering a button that could
@@ -104,11 +104,13 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   const musicOn = useGameStore((s) => s.musicVolume > 0);
   const [loading, setLoading] = useState(true);
 
-  // A new random track for every level; retrying the same level keeps it.
+  // One random track per level, kept for the whole level (retries and
+  // music on/off included); leaving the game screen forgets it.
   useEffect(() => {
-    playRandomMusic();
+    playMusicForLevel(activeLevel);
     return stopMusic;
   }, [activeLevel, musicEnabled, musicOn]);
+  useEffect(() => resetMusicChoice, []);
   const [scrollLocked, setScrollLocked] = useState(false);
   // The hint overlay: `hintActive` drives the dimmed-screen effect,
   // `hintDeduction` holds what to highlight and what "Appliquer" will
