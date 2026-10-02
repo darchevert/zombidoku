@@ -14,7 +14,7 @@
 // `ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY`) and flip `USE_TEST_ADS` to
 // `false` — that's the entire migration.
 
-const USE_TEST_ADS = true;
+const USE_TEST_ADS = false;
 
 const TEST_ANDROID_APP_ID = 'ca-app-pub-3940256099942544~3347511713';
 const TEST_IOS_APP_ID = 'ca-app-pub-3940256099942544~1458002511';
