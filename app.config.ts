@@ -19,7 +19,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: 'com.darchevert.zombidoku',
-    versionCode: 4,
+    versionCode: 5,
     adaptiveIcon: {
       backgroundColor: '#241B33',
       foregroundImage: './assets/android-icon-foreground.png',

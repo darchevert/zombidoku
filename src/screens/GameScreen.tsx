@@ -26,6 +26,8 @@ import { colors } from '../theme/colors';
 import { MAX_CONTENT_WIDTH } from '../theme/layout';
 import { useT } from '../i18n';
 import { DifficultyBadge } from '../components/DifficultyBadge';
+import { TutorialCoach } from '../components/TutorialCoach';
+import { TUTORIAL_LEVELS, tutorialPuzzleForLevel, tutorialStep, type TutorialStep } from '../engine/tutorial';
 import { LockableScrollView, type LockableScrollViewHandle } from '../components/LockableScrollView';
 import type { WinStats } from '../components/WinModal';
 import { playMusicForLevel, resetMusicChoice, stopMusic } from '../utils/music';
@@ -168,6 +170,27 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   const [won, setWon] = useState(false);
   const [lives, setLives] = useState(MAX_LIVES);
   const [lost, setLost] = useState(false);
+
+  // Guided first levels: scripted boards, a coach bubble, highlighted cells,
+  // and only the asked-for move accepted (see engine/tutorial).
+  const tutorialLevel = !daily && activeLevel <= TUTORIAL_LEVELS;
+  const introCount = activeLevel === 1 ? 3 : 2;
+  const [introIdx, setIntroIdx] = useState(0);
+  const [markedOnce, setMarkedOnce] = useState(false);
+  const [nudge, setNudge] = useState(false);
+  const tutorialActive = tutorialLevel && !won;
+  const introDone = introIdx >= introCount;
+  const step: TutorialStep | null = useMemo(
+    () => (tutorialActive && introDone && puzzle ? tutorialStep(puzzle, grid) : null),
+    [tutorialActive, introDone, puzzle, grid]
+  );
+  useEffect(() => setNudge(false), [step?.phase, step?.cells.length]);
+  /** Whether a touch on this cell is the move the coach asked for. */
+  function tutorialAllows(row: number, col: number): boolean {
+    if (!tutorialActive) return true;
+    if (!step) return false; // during the intro cards the board is inert
+    return step.cells.some((c) => c.row === row && c.col === col);
+  }
   const [lastReward, setLastReward] = useState<{ score: number; brains: number; bonuses: BonusKind[] }>({
     score: 0,
     brains: 0,
@@ -256,9 +279,12 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
     setElapsedSec(0);
     setIsNewRecord(false);
     const timer = setTimeout(() => {
-      const p = daily ? generateDailyPuzzle() : generatePuzzle(size);
+      const p = daily ? generateDailyPuzzle() : (tutorialPuzzleForLevel(activeLevel) ?? generatePuzzle(size));
       setPuzzle(p);
-      setGrid(emptyGrid(size));
+      setGrid(emptyGrid(p.size));
+      setIntroIdx(0);
+      setMarkedOnce(false);
+      setNudge(false);
       setLoading(false);
     }, 0);
     return () => clearTimeout(timer);
@@ -320,6 +346,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   }, [zombies, puzzle, lost]);
 
   function setCell(row: number, col: number, state: CellState) {
+    if (tutorialActive && state === 'x') setMarkedOnce(true);
     setGrid((prev) => {
       const next = prev.map((r) => r.slice());
       next[row][col] = state;
@@ -418,6 +445,20 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
       !!last && last.row === row && last.col === col && now - last.time < DOUBLE_TAP_MS;
     lastTapRef.current = { row, col, time: now };
 
+    if (tutorialActive) {
+      if (!tutorialAllows(row, col) || (step?.phase === 'mark' && isDoubleTap)) {
+        lastTapRef.current = null;
+        gestureModeRef.current = null;
+        if (step) setNudge(true);
+        return;
+      }
+      if (step?.phase === 'place' && !isDoubleTap) {
+        gestureModeRef.current = null;
+        setNudge(true);
+        return;
+      }
+    }
+
     if (isDoubleTap) {
       lastTapRef.current = null;
       gestureModeRef.current = null;
@@ -441,6 +482,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   function handleGestureMove(row: number, col: number) {
     const mode = gestureModeRef.current;
     if (!mode) return;
+    if (tutorialActive && !tutorialAllows(row, col)) return;
     const cur = grid[row]?.[col];
     if (mode === 'add' && cur === 'empty') playIfEnabled('mark');
     if ((mode === 'add' && cur === 'empty') || (mode === 'remove' && cur === 'x')) tickHaptic();
@@ -607,8 +649,41 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
       badge: showAdPrompt ? '▶' : count,
       badgeVariant: (showAdPrompt ? 'ad' : 'count') as 'ad' | 'count',
       onPress: showAdPrompt ? () => handleWatchAdFor(kind) : onAction,
-      disabled: hintActive || adLoadingKey === kind || (kind === 'mouse' && mouseBusy),
+      disabled: tutorialActive || hintActive || adLoadingKey === kind || (kind === 'mouse' && mouseBusy),
     };
+  }
+
+  /** The coach's message for the current step of the guided levels. */
+  function coachText(): string {
+    if (!introDone) return t(`tut.l${activeLevel}.intro${introIdx + 1}`);
+    if (!step || step.phase === 'done') return t('tut.almost');
+    if (step.phase === 'place') {
+      if (nudge) return t('tut.nudgePlace');
+      return t(`tut.place.${step.reason}`);
+    }
+    if (nudge) return t('tut.nudgeMark');
+    return t(markedOnce ? 'tut.markMore' : 'tut.markFirst');
+  }
+
+  function coachButton(): { label: string; onPress: () => void } | null {
+    if (!introDone) {
+      const last = introIdx === introCount - 1;
+      return { label: t(last ? 'tut.start' : 'tut.next'), onPress: () => setIntroIdx((i) => i + 1) };
+    }
+    if (step?.phase === 'mark' && step.cells.length >= 2) {
+      return {
+        label: t('tut.markForMe'),
+        onPress: () => {
+          setGrid((prev) => {
+            const next = prev.map((r) => r.slice());
+            for (const c of step.cells) if (next[c.row][c.col] === 'empty') next[c.row][c.col] = 'x';
+            return next;
+          });
+          setMarkedOnce(true);
+        },
+      };
+    }
+    return null;
   }
 
   const shakeTranslate = shakeAnim.interpolate({
@@ -656,7 +731,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
               {!daily && <DifficultyBadge level={activeLevel} />}
               <ProgressBadges
                 zombiesPlaced={zombies.length}
-                zombiesTotal={size}
+                zombiesTotal={puzzle?.size ?? size}
                 lives={lives}
                 maxLives={MAX_LIVES}
                 zen={zenActive}
@@ -668,7 +743,16 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
                 </Text>
               )}
 
-              {!hideRules && <RuleCards />}
+              {tutorialActive && puzzle ? (
+                <TutorialCoach
+                  text={coachText()}
+                  nudge={nudge}
+                  buttonLabel={coachButton()?.label}
+                  onButton={coachButton()?.onPress}
+                />
+              ) : (
+                !hideRules && <RuleCards />
+              )}
             </View>
 
             <View
@@ -685,9 +769,9 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
                   regions={puzzle.regions}
                   grid={grid}
                   conflictKeys={conflictKeys}
-                  highlightXCells={hintDeduction?.xCells}
-                  highlightZombieCell={hintDeduction?.zombieCell}
-                  dimBoard={hintActive}
+                  highlightXCells={step?.phase === 'mark' ? step.cells : hintDeduction?.xCells}
+                  highlightZombieCell={step?.phase === 'place' ? step.cells[0] : hintDeduction?.zombieCell}
+                  dimBoard={hintActive || (tutorialActive && introDone && step?.phase !== 'done')}
                   critterCell={critterCell}
                   onCellGestureStart={handleGestureStart}
                   onCellGestureMove={handleGestureMove}
@@ -712,7 +796,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
             )}
 
             <View style={[styles.powerRow, { gap: powerGap }, hintActive && styles.dimmedChrome]}>
-              <PowerButton emoji="↩" onPress={handleUndo} disabled={!canUndo || hintActive} />
+              <PowerButton emoji="↩" onPress={handleUndo} disabled={!canUndo || hintActive || tutorialActive} />
               <PowerButton emoji="🧟" {...powerButtonProps(autoCats, 'autoCat', handleAutoCat)} />
               <PowerButton emoji="💡" {...powerButtonProps(hints, 'hint', handleHint)} />
               <PowerButton emoji="🦇" {...powerButtonProps(mice, 'mouse', handleMouse)} />
