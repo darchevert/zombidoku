@@ -35,10 +35,17 @@ const IOS_APP_ID = USE_TEST_ADS ? TEST_IOS_APP_ID : REAL_IOS_APP_ID;
 const ANDROID_REWARDED_UNIT_ID = 'ca-app-pub-5218071664586608/6201738344';
 const IOS_REWARDED_UNIT_ID = 'ca-app-pub-5218071664586608/1165034087';
 
+// Interstitial ad unit IDs (one per platform). Empty until the units exist in
+// the AdMob console: no interstitial is requested while an ID is empty.
+const ANDROID_INTERSTITIAL_UNIT_ID = '';
+const IOS_INTERSTITIAL_UNIT_ID = '';
+
 module.exports = {
   USE_TEST_ADS,
   ANDROID_APP_ID,
   IOS_APP_ID,
   ANDROID_REWARDED_UNIT_ID,
   IOS_REWARDED_UNIT_ID,
+  ANDROID_INTERSTITIAL_UNIT_ID,
+  IOS_INTERSTITIAL_UNIT_ID,
 };

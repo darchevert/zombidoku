@@ -18,7 +18,9 @@ import { levelDifficulty, levelToSize, scoreForCompletion } from '../utils/level
 import { rollLevelReward, type BonusKind } from '../utils/rewards';
 import { DAILY_CHALLENGE_BRAIN_REWARD, DAILY_CHALLENGE_SIZE, generateDailyPuzzle } from '../utils/dailyChallenge';
 import { playSound } from '../utils/sounds';
-import { showRewardedAd } from '../utils/ads';
+import { showInterstitialAd, showRewardedAd } from '../utils/ads';
+import { claimInterstitial, claimLoseShopPopup, markPlayed } from '../utils/adPolicy';
+import { ShopModal } from '../components/ShopModal';
 import { useGameStore } from '../state/store';
 import { colors } from '../theme/colors';
 import { MAX_CONTENT_WIDTH } from '../theme/layout';
@@ -79,6 +81,35 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
   const grantHint = useGameStore((s) => s.grantHint);
   const grantAutoCat = useGameStore((s) => s.grantAutoCat);
   const grantMouse = useGameStore((s) => s.grantMouse);
+
+  // Interstitials between levels and the shop pop-up after a loss; both
+  // only on native, and never during a game (see utils/adPolicy).
+  const [shopOpen, setShopOpen] = useState(false);
+  const afterShop = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    markPlayed();
+  }, []);
+
+  /** Runs `action`, but first offers the shop once in a while (after a loss). */
+  function afterLoss(action: () => void) {
+    if (ADS_SUPPORTED && claimLoseShopPopup()) {
+      afterShop.current = action;
+      setShopOpen(true);
+    } else {
+      action();
+    }
+  }
+
+  async function goToNextLevel() {
+    setWon(false);
+    // The level just finished is the store's level minus one (the store has
+    // already moved on to the next one).
+    const finished = useGameStore.getState().level - 1;
+    if (ADS_SUPPORTED && claimInterstitial(finished, useGameStore.getState().adsRemoved)) {
+      await showInterstitialAd();
+    }
+    setActiveLevel((l) => l + 1);
+  }
 
   // The daily challenge always keeps its real stakes — zen mode is a
   // level-play comfort setting, not something that should water down the
@@ -700,10 +731,7 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
         onPrimary={
           daily
             ? onBack
-            : () => {
-                setWon(false);
-                setActiveLevel((l) => l + 1);
-              }
+            : goToNextLevel
         }
         secondaryLabel={daily ? undefined : t('common.home')}
         onSecondary={daily ? undefined : onBack}
@@ -715,11 +743,23 @@ export function GameScreen({ onBack, onSettings, daily = false }: GameScreenProp
       <LoseModal
         visible={lost}
         title={daily ? t('lose.dailyTitle') : t('lose.title', { n: activeLevel })}
-        onRetry={() => {
-          setLost(false);
-          setAttempt((a) => a + 1);
+        onRetry={() =>
+          afterLoss(() => {
+            setLost(false);
+            setAttempt((a) => a + 1);
+          })
+        }
+        onHome={() => afterLoss(onBack)}
+      />
+
+      <ShopModal
+        visible={shopOpen}
+        onClose={() => {
+          setShopOpen(false);
+          const next = afterShop.current;
+          afterShop.current = null;
+          next?.();
         }}
-        onHome={onBack}
       />
     </View>
   );

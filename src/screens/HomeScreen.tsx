@@ -13,6 +13,10 @@ import { PressableScale } from '../components/PressableScale';
 import { MAX_CONTENT_WIDTH } from '../theme/layout';
 import { useT } from '../i18n';
 import { TombsModal } from '../components/TombsModal';
+import { ShopModal } from '../components/ShopModal';
+import { Platform } from 'react-native';
+import { claimHomeShopPopup } from '../utils/adPolicy';
+import { hasRemovedAds } from '../utils/purchases';
 import { TOMB_RULES } from '../utils/rewards';
 import { HOME_TRACK_INDEX, playMusicForLevel, stopMusic } from '../utils/music';
 import { DifficultyBadge } from '../components/DifficultyBadge';
@@ -48,6 +52,19 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [showCompanion, setShowCompanion] = useState(false);
   const [showTombs, setShowTombs] = useState(false);
+  const [showShop, setShowShop] = useState(false);
+  const setAdsRemoved = useGameStore((s) => s.setAdsRemoved);
+
+  // Back on the home screen after a game: pop the shop up once in a while.
+  // At the same time, quietly re-check that "remove ads" is still owned (new
+  // phone, reinstall).
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    hasRemovedAds().then((bought) => bought && setAdsRemoved());
+    if (!claimHomeShopPopup()) return;
+    const id = setTimeout(() => setShowShop(true), 700);
+    return () => clearTimeout(id);
+  }, []);
   const tombStatus = useGameStore((s) => s.tombStatus);
   const tombUsage = useGameStore((s) => s.tombUsage);
   const tombDay = useGameStore((s) => s.tombDay);
@@ -163,6 +180,7 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
       <SettingsModal visible={showSettings} onClose={() => setShowSettings(false)} />
       <CompanionModal visible={showCompanion} onClose={() => setShowCompanion(false)} />
       <TombsModal visible={showTombs} onClose={() => setShowTombs(false)} />
+      <ShopModal visible={showShop} onClose={() => setShowShop(false)} />
     </View>
   );
 }

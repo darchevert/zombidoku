@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, View } f
 import { colors } from '../theme/colors';
 import { useGameStore } from '../state/store';
 import { useT } from '../i18n';
-import { buyItem, loadShop, type ShopItem, type ShopState } from '../utils/purchases';
+import { buyItem, hasRemovedAds, loadShop, type ShopItem, type ShopState } from '../utils/purchases';
 import { PressableScale } from './PressableScale';
 import { PopCard } from './PopCard';
 
@@ -28,6 +28,9 @@ function contents(item: ShopItem): string {
 export function ShopModal({ visible, onClose }: ShopModalProps) {
   const t = useT();
   const grantPurchase = useGameStore((s) => s.grantPurchase);
+  const adsRemoved = useGameStore((s) => s.adsRemoved);
+  const setAdsRemoved = useGameStore((s) => s.setAdsRemoved);
+  const [restoring, setRestoring] = useState(false);
   const [state, setState] = useState<ShopState | 'loading'>('loading');
   const [items, setItems] = useState<ShopItem[]>([]);
   const [buying, setBuying] = useState<string | null>(null);
@@ -53,11 +56,23 @@ export function ShopModal({ visible, onClose }: ShopModalProps) {
     setBuying(null);
     if (result.status === 'success') {
       grantPurchase(item.id, result.transactionId);
-      Alert.alert(t('shop.thanks'), contents(item));
+      Alert.alert(t('shop.thanks'), item.removeAds ? t('shop.removeAds') : contents(item));
     } else if (result.status === 'error') {
       Alert.alert(t('shop.error'));
     }
   }
+
+  async function handleRestore() {
+    if (restoring) return;
+    setRestoring(true);
+    const bought = await hasRemovedAds(true);
+    setRestoring(false);
+    if (bought) setAdsRemoved();
+    Alert.alert(bought ? t('shop.restored') : t('shop.nothingToRestore'));
+  }
+
+  // "Remove ads" disappears from the shop once it is bought.
+  const shown = items.filter((item) => !(item.removeAds && adsRemoved));
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -74,11 +89,11 @@ export function ShopModal({ visible, onClose }: ShopModalProps) {
           {state === 'unavailable' && <Text style={styles.empty}>{t('shop.unavailable')}</Text>}
           {state === 'ready' && (
             <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
-              {items.map((item) => (
+              {shown.map((item) => (
                 <View key={item.id} style={styles.product}>
                   <Text style={styles.emoji}>{item.emoji}</Text>
                   <Text style={styles.name}>{t(item.titleKey)}</Text>
-                  <Text style={styles.content}>{contents(item)}</Text>
+                  <Text style={styles.content}>{item.removeAds ? t('shop.removeAdsDesc') : contents(item)}</Text>
                   <PressableScale
                     style={styles.buy}
                     disabled={!!buying}
@@ -94,6 +109,9 @@ export function ShopModal({ visible, onClose }: ShopModalProps) {
               ))}
             </ScrollView>
           )}
+          <PressableScale onPress={handleRestore} disabled={restoring}>
+            <Text style={styles.restore}>{restoring ? '…' : t('shop.restore')}</Text>
+          </PressableScale>
           <Text style={styles.footnote}>{t('shop.fixed')}</Text>
         </PopCard>
       </View>
@@ -195,6 +213,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '900',
     color: colors.background,
+  },
+  restore: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.accent,
+    textAlign: 'center',
+    textDecorationLine: 'underline',
+    marginTop: 10,
   },
   footnote: {
     fontSize: 11,

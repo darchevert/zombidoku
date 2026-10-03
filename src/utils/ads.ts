@@ -30,7 +30,13 @@
 import { Platform } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { ensureTrackingPermission } from './tracking';
-import { USE_TEST_ADS, ANDROID_REWARDED_UNIT_ID, IOS_REWARDED_UNIT_ID } from '../config/adIds';
+import {
+  USE_TEST_ADS,
+  ANDROID_REWARDED_UNIT_ID,
+  IOS_REWARDED_UNIT_ID,
+  ANDROID_INTERSTITIAL_UNIT_ID,
+  IOS_INTERSTITIAL_UNIT_ID,
+} from '../config/adIds';
 
 type AdsModule = typeof import('react-native-google-mobile-ads');
 
@@ -119,6 +125,54 @@ export async function showRewardedAd(): Promise<boolean> {
     const unsubscribeClosed = rewarded.addAdEventListener(AdEventType.CLOSED, () => finish(earnedReward));
 
     rewarded.load();
+  });
+}
+
+const REAL_INTERSTITIAL_IDS = { android: ANDROID_INTERSTITIAL_UNIT_ID, ios: IOS_INTERSTITIAL_UNIT_ID };
+
+/** Shows a full-screen interstitial and resolves once it is closed (or
+ * immediately when it can't be shown). Never rejects, never blocks the
+ * game for long: a 6 s load timeout falls through silently. */
+export async function showInterstitialAd(): Promise<void> {
+  const ads = getSdk();
+  if (!ads) return;
+  const { AdsConsent, InterstitialAd, AdEventType, TestIds } = ads;
+  const realId = Platform.select(REAL_INTERSTITIAL_IDS) ?? '';
+  if (!USE_TEST_ADS && !realId) return;
+
+  try {
+    await ensureTrackingPermission();
+    await AdsConsent.gatherConsent();
+    if (!(await AdsConsent.getConsentInfo()).canRequestAds) return;
+    if (!mobileAdsInitPromise) mobileAdsInitPromise = ads.default().initialize();
+    await mobileAdsInitPromise;
+  } catch {
+    return;
+  }
+
+  await new Promise<void>((resolve) => {
+    const interstitial = InterstitialAd.createForAdRequest(USE_TEST_ADS ? TestIds.INTERSTITIAL : realId);
+    let settled = false;
+    const timeout = setTimeout(() => finish(), 6000);
+
+    function finish() {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      unsubscribeLoaded();
+      unsubscribeError();
+      unsubscribeClosed();
+      resolve();
+    }
+
+    const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
+      if (settled) return;
+      clearTimeout(timeout);
+      interstitial.show().catch(() => finish());
+    });
+    const unsubscribeError = interstitial.addAdEventListener(AdEventType.ERROR, () => finish());
+    const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => finish());
+    interstitial.load();
   });
 }
 

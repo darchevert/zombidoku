@@ -14,6 +14,10 @@ export async function loadShop(): Promise<{ state: ShopState; items: ShopItem[] 
   return { state: 'unavailable', items: [] };
 }
 
+export async function hasRemovedAds(_restore = false): Promise<boolean> {
+  return false;
+}
+
 export type PurchaseResult =
   | { status: 'success'; transactionId: string }
   | { status: 'cancelled' }

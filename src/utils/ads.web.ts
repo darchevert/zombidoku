@@ -16,6 +16,8 @@ export function showRewardedAd(): Promise<boolean> {
   });
 }
 
+export async function showInterstitialAd(): Promise<void> {}
+
 export async function privacyOptionsRequired(): Promise<boolean> {
   return false;
 }

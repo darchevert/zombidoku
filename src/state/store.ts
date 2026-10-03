@@ -73,6 +73,9 @@ interface GameState {
   // In-app purchases: transaction ids already granted, so a purchase is
   // never credited twice.
   processedPurchases: string[];
+  /** True once "remove ads" was bought: no more interstitials. */
+  adsRemoved: boolean;
+  setAdsRemoved: () => void;
   /** Credits the content of a purchased product; false if unknown or already granted. */
   grantPurchase: (productId: string, transactionId: string) => boolean;
 
@@ -198,9 +201,18 @@ export const useGameStore = create<GameState>()(
         })),
 
       processedPurchases: [],
+      adsRemoved: false,
+      setAdsRemoved: () => set({ adsRemoved: true }),
       grantPurchase: (productId, transactionId) => {
         const product = SHOP_PRODUCTS.find((p) => p.id === productId);
         if (!product || get().processedPurchases.includes(transactionId)) return false;
+        if (product.removeAds) {
+          set((s) => ({
+            processedPurchases: [...s.processedPurchases, transactionId].slice(-200),
+            adsRemoved: true,
+          }));
+          return true;
+        }
         set((s) => ({
           processedPurchases: [...s.processedPurchases, transactionId].slice(-200),
           brains: s.brains + product.grant.brains,

@@ -11,6 +11,7 @@
 import { Platform } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import {
+  REMOVE_ADS_PRODUCT_ID,
   REVENUECAT_API_KEYS,
   SHOP_PRODUCTS,
   isRevenueCatConfigured,
@@ -80,6 +81,20 @@ export async function loadShop(): Promise<{ state: ShopState; items: ShopItem[] 
     return { state: items.length > 0 ? 'ready' : 'unavailable', items };
   } catch {
     return { state: 'unavailable', items: [] };
+  }
+}
+
+/** Asks the store whether this account already bought "remove ads" (a
+ * reinstall or a new phone). `restore` also re-syncs with the store account. */
+export async function hasRemovedAds(restore = false): Promise<boolean> {
+  const mod = getSdk();
+  if (!mod) return false;
+  try {
+    if (!configure(mod)) return false;
+    const info = restore ? await mod.default.restorePurchases() : await mod.default.getCustomerInfo();
+    return info.allPurchasedProductIdentifiers.includes(REMOVE_ADS_PRODUCT_ID);
+  } catch {
+    return false;
   }
 }
 

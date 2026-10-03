@@ -31,6 +31,8 @@ export interface ShopProduct {
   /** i18n key of the product's name. */
   titleKey: string;
   grant: ProductGrant;
+  /** Non-consumable: removes the interstitial ads for good instead of granting items. */
+  removeAds?: boolean;
 }
 
 const none = { brains: 0, hints: 0, autoCats: 0, mice: 0 };
@@ -51,4 +53,7 @@ export const SHOP_PRODUCTS: ShopProduct[] = [
     titleKey: 'shop.megaPack',
     grant: { brains: 400, hints: 10, autoCats: 10, mice: 10 },
   },
+  { id: 'zombidoku_remove_ads', emoji: '🚫', titleKey: 'shop.removeAds', grant: none, removeAds: true },
 ];
+
+export const REMOVE_ADS_PRODUCT_ID = 'zombidoku_remove_ads';
