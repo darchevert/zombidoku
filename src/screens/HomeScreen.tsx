@@ -14,6 +14,8 @@ import { MAX_CONTENT_WIDTH } from '../theme/layout';
 import { useT } from '../i18n';
 import { TombsModal } from '../components/TombsModal';
 import { ShopModal } from '../components/ShopModal';
+import { RulesModal } from '../components/RulesModal';
+import { FRAME_COLORS } from '../components/ProfileModal';
 import { Platform } from 'react-native';
 import { claimHomeShopPopup } from '../utils/adPolicy';
 import { hasRemovedAds } from '../utils/purchases';
@@ -43,6 +45,7 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
   }, [musicOn]);
   const level = useGameStore((s) => s.level);
   const avatar = useGameStore((s) => s.avatar);
+  const frame = useGameStore((s) => s.frame);
   const streak = useGameStore((s) => s.streak);
   const dailyDoneToday = useGameStore((s) => s.hasCompletedDailyToday());
   const companionXp = useGameStore((s) => s.companionXp);
@@ -53,6 +56,7 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
   const [showCompanion, setShowCompanion] = useState(false);
   const [showTombs, setShowTombs] = useState(false);
   const [showShop, setShowShop] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const setAdsRemoved = useGameStore((s) => s.setAdsRemoved);
 
   // Back on the home screen after a game: pop the shop up once in a while.
@@ -88,7 +92,10 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
     <View style={styles.screen}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
         <View style={styles.topRow}>
-          <PressableScale style={styles.avatarButton} onPress={() => setShowProfile(true)}>
+          <PressableScale
+            style={[styles.avatarButton, frame !== 'none' && { borderColor: FRAME_COLORS[frame] }]}
+            onPress={() => setShowProfile(true)}
+          >
             <Text style={styles.avatarEmoji}>{AVATAR_EMOJI[avatar]}</Text>
           </PressableScale>
           <PressableScale style={styles.tombsButton} onPress={() => setShowTombs(true)}>
@@ -96,9 +103,14 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
             <Text style={styles.tombsLabel}>{t('tombs.title')}</Text>
             {freeTombWaiting && <View style={styles.tombsDot} />}
           </PressableScale>
-          <PressableScale style={styles.settingsButton} onPress={() => setShowSettings(true)}>
-            <Text style={styles.settingsIcon}>⚙</Text>
-          </PressableScale>
+          <View style={styles.topRight}>
+            <PressableScale style={styles.settingsButton} onPress={() => setShowRules(true)}>
+              <Text style={styles.settingsIcon}>?</Text>
+            </PressableScale>
+            <PressableScale style={styles.settingsButton} onPress={() => setShowSettings(true)}>
+              <Text style={styles.settingsIcon}>⚙</Text>
+            </PressableScale>
+          </View>
         </View>
 
         <View style={[styles.cardsRow, compact && { marginTop: tiny ? 10 : 18 }]}>
@@ -181,6 +193,7 @@ export function HomeScreen({ onPlay, onPlayDaily }: HomeScreenProps) {
       <CompanionModal visible={showCompanion} onClose={() => setShowCompanion(false)} />
       <TombsModal visible={showTombs} onClose={() => setShowTombs(false)} />
       <ShopModal visible={showShop} onClose={() => setShowShop(false)} />
+      <RulesModal visible={showRules} onClose={() => setShowRules(false)} />
     </View>
   );
 }
@@ -211,6 +224,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     width: '100%',
+  },
+  topRight: {
+    flexDirection: 'row',
+    gap: 10,
   },
   avatarButton: {
     width: 56,

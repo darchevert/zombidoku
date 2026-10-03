@@ -45,6 +45,9 @@ interface GameState {
   playerId: string;
   avatar: AvatarId;
   frame: FrameId;
+  /** Chosen nickname; empty means "show the generated player id". */
+  playerName: string;
+  setPlayerName: (name: string) => void;
   setAvatar: (avatar: AvatarId) => void;
   setFrame: (frame: FrameId) => void;
 
@@ -183,6 +186,8 @@ export const useGameStore = create<GameState>()(
       playerId: randomPlayerId(),
       avatar: 'zombie',
       frame: 'green',
+      playerName: '',
+      setPlayerName: (name) => set({ playerName: name.trim().slice(0, 16) }),
       setAvatar: (avatar) => set({ avatar }),
       setFrame: (frame) => set({ frame }),
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { colors } from '../theme/colors';
 import {
   AVATARS,
@@ -13,7 +13,7 @@ import { PressableScale } from './PressableScale';
 import { PopCard } from './PopCard';
 import { useT } from '../i18n';
 
-const FRAME_COLORS: Record<FrameId, string> = {
+export const FRAME_COLORS: Record<FrameId, string> = {
   none: 'transparent',
   green: '#7BC77E',
   gold: '#E8C34A',
@@ -33,10 +33,13 @@ export function ProfileModal({ visible, onClose }: ProfileModalProps) {
   const frame = useGameStore((s) => s.frame);
   const setAvatar = useGameStore((s) => s.setAvatar);
   const setFrame = useGameStore((s) => s.setFrame);
+  const playerName = useGameStore((s) => s.playerName);
+  const setPlayerName = useGameStore((s) => s.setPlayerName);
 
   const [tab, setTab] = useState<'avatar' | 'frame'>('avatar');
   const [pendingAvatar, setPendingAvatar] = useState<AvatarId>(avatar);
   const [pendingFrame, setPendingFrame] = useState<FrameId>(frame);
+  const [pendingName, setPendingName] = useState(playerName);
 
   // Closing with ✕ discards the unconfirmed picks: start from the saved
   // profile every time the modal opens.
@@ -44,6 +47,7 @@ export function ProfileModal({ visible, onClose }: ProfileModalProps) {
     if (visible) {
       setPendingAvatar(avatar);
       setPendingFrame(frame);
+      setPendingName(playerName);
       setTab('avatar');
     }
   }, [visible]);
@@ -69,7 +73,17 @@ export function ProfileModal({ visible, onClose }: ProfileModalProps) {
               <Text style={styles.avatarPreviewEmoji}>{AVATAR_EMOJI[pendingAvatar]}</Text>
             </View>
             <View style={styles.idBox}>
-              <Text style={styles.idText}>{playerId}</Text>
+              <TextInput
+                style={styles.idText}
+                value={pendingName}
+                onChangeText={setPendingName}
+                placeholder={playerId}
+                placeholderTextColor={colors.inkSoft}
+                maxLength={16}
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="done"
+              />
             </View>
           </View>
 
@@ -129,6 +143,7 @@ export function ProfileModal({ visible, onClose }: ProfileModalProps) {
             onPress={() => {
               setAvatar(pendingAvatar);
               setFrame(pendingFrame);
+              setPlayerName(pendingName);
               onClose();
             }}
           >
@@ -209,6 +224,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.ink,
     letterSpacing: 1,
+    padding: 0,
   },
   tabRow: {
     flexDirection: 'row',
