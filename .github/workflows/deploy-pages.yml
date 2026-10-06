@@ -1,0 +1,59 @@
+name: Deploy web build to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - claude/meowdoku-analysis-recreation-731xdx
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Export web build
+        run: npx expo export --platform web --output-dir dist
+
+      # GitHub Pages project sites are served from /<repo>/, but Expo's
+      # web export emits root-absolute asset paths (e.g. "/_expo/...").
+      # Rewriting them to relative paths lets the same build work at any
+      # subpath without needing an Expo Router base-url config.
+      - name: Make asset paths relative for Pages subpath hosting
+        run: sed -i 's|="/|="|g' dist/index.html
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
