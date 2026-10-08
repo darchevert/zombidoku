@@ -19,7 +19,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: 'com.darchevert.zombidoku',
-    versionCode: 5,
+    versionCode: 6,
     adaptiveIcon: {
       backgroundColor: '#241B33',
       foregroundImage: './assets/android-icon-foreground.png',
@@ -31,12 +31,25 @@ const config: ExpoConfig = {
   web: {
     favicon: './assets/favicon.png',
   },
+  splash: {
+    image: './assets/splash-icon.png',
+    resizeMode: 'contain',
+    backgroundColor: '#241B33',
+  },
   extra: {
     eas: {
       projectId: '03395c33-adff-4734-8fcd-3abb7f2afa1d',
     },
   },
   plugins: [
+    [
+      'expo-splash-screen',
+      {
+        image: './assets/splash-icon.png',
+        backgroundColor: '#241B33',
+        resizeMode: 'contain',
+      },
+    ],
     [
       'expo-tracking-transparency',
       {
